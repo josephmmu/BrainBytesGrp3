@@ -34,10 +34,12 @@ Development Environment Setup Verification
 
 | Team Member    | Docker Installed  | Git Installed| VS Code Installed   | Can Run Hello World Container     |
 |----------------|-------------------|--------------|---------------------|-----------------------------------|
-| [Name]         | ✓                 | ✓           | ✓                   | ✓                                |
-| [Name]         | ✓                 | ✓           | ✓                   | ✓                                |
-| [Name]         | ✓                 | ✓           | ✓                   | ✓                                |
-| [Name]         | ✓                 | ✓           | ✓                   | ✓                                |
+| [Joseph Sales]         | ✓                 | ✓           | ✓                   | ✓                                |
+| [John Clyde Austria]         | ✓                 | ✓           | ✓                   | ✓                                |
+| [Reinard Ezekiel Rivera]         | ✓                 | ✓           | ✓                   | ✓                                |
+| [Francis John Alintano]         | ✓                 | ✓           | ✓                   | ✓                                |
+| [Keanne Wesley Eucogco]         | ✓                 | ✓           | ✓                   | ✓                                |
+
 
 ## Docker Version Information
 
