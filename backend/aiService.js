@@ -217,16 +217,15 @@ function identifyEmotion(text) {
   }
 
   // Determine overall mood based on the score
-  let mood = 'neutral';// Default mood
+  let mood = 'Neutral';// Default mood
 
-  if (score > 5) mood = 'Strongly positive';
+  if (score > 5) mood = 'Strongly Positive';
   else if (score >= 1) mood = 'Positive';
-  else if (score < -5) mood = 'Strongly negative';
-  else if (score <= -1) mood = 'Negative or frustrated'; 
+  else if (score < -5) mood = 'Strongly Negative';
+  else if (score <= -1) mood = 'Negative or Frustrated'; 
 
   // Return both the numeric score and mood label
   return { score, mood };
-  //return 'Emotion: ' + mood + ', Score: ' + score;
 }
 
 // More detailed fallback responses when the API call fails
