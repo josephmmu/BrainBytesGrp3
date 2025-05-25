@@ -5,7 +5,7 @@
     "main": "server.js",
     "scripts": {
         "start": "node server.js"
-    },
+    },    
     "dependencies": {
         "brainbytes-api": "file:",
         "cors": "^2.8.5",

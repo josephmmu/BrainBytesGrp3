@@ -1,5 +1,9 @@
 const fetch = require('node-fetch');
 
+// Basic word list
+const positiveWords = ['good', 'great', 'happy', 'excellent', 'amazing', 'love', 'fantastic', 'like', 'nice', 'awesome'];
+const negativeWords = ['bad', 'terrible', 'sad', 'awful', 'hate', 'horrible', 'worst', 'angry', 'dislike', 'frustrated'];
+
 // Initialize our AI service
 const initializeAI = () => {
   console.log('Hugging Face AI service initialized');
@@ -14,6 +18,16 @@ const initializeAI = () => {
 async function generateResponse(question) {
   // Define categories based on content
   const lowerQuestion = question.toLowerCase();
+
+  const emo = identifyEmotion(question);
+
+  // Logging the sentiment "score" to the console
+  // This is typically a numeric representation of how positive/negative the text is
+  console.log("Score: " + emo.score);
+
+  // Logging the interpreted "mood" to the console
+  // Usually, a label like "neutral", "positive" or "negative"
+  console.log("Mood: " + emo.mood);
   
   const isMath = lowerQuestion.includes('calculate') || 
                  lowerQuestion.includes('math') ||
@@ -28,6 +42,7 @@ async function generateResponse(question) {
                     lowerQuestion.includes('capital') ||
                     lowerQuestion.includes('philippines') ||
                     lowerQuestion.includes('president') ||
+                    lowerQuestion.includes('sibling') ||
                     lowerQuestion.includes('republic') ||
                     lowerQuestion.includes('woman') ||
                     lowerQuestion.includes('rule');
@@ -184,9 +199,49 @@ async function generateResponse(question) {
   }
 }
 
+function identifyEmotion(text) {
+  // Convert all text to lowercase and split into words, removing punctuation
+  const words = text.toLowerCase().split(/\W+/); // Regex \W+ matches non-word characters
+  
+  let score = 0; // Initialize sentiment score
+
+  // Loop through each word in the input
+  for (const word of words) {
+    // If the word is in the positive list, increase score
+    if (positiveWords.includes(word)) {
+      score++;
+    // If the word is in the negative list, decrease score
+    } else if (negativeWords.includes(word)) {
+      score--;
+    }
+  }
+
+  // Determine overall mood based on the score
+  let mood = 'neutral';// Default mood
+
+  if (score > 5) mood = 'Strongly positive';
+  else if (score >= 1) mood = 'Positive';
+  else if (score < -5) mood = 'Strongly negative';
+  else if (score <= -1) mood = 'Negative or frustrated'; 
+
+  // Return both the numeric score and mood label
+  return { score, mood };
+  //return 'Emotion: ' + mood + ', Score: ' + score;
+}
+
 // More detailed fallback responses when the API call fails
 function getDetailedResponse(category, question) {
   const lowerQuestion = question.toLowerCase();
+
+  const emo = identifyEmotion(question);
+
+  // Logging the sentiment "score" to the console
+  // This is typically a numeric representation of how positive/negative the text is
+  console.log("Score: " + emo.score);
+
+  // Logging the interpreted "mood" to the console
+  // Usually, a label like "neutral", "positive" or "negative"
+  console.log("Mood: " + emo.mood);
   
   // Check for exact matches first
   if (lowerQuestion === 'what is 1+1' || lowerQuestion === '1+1') {
