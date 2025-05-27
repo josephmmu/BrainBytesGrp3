@@ -25,6 +25,12 @@ BrainBytes is an AI-powered tutoring platform designed to provide accessible aca
 - Monitoring: Prometheus & Grafana
 
 
+## How to use the Tutoring Platform
+
+Link:
+
+1. Launch the platformby clicking the link
+2. 
 
 
 Development Environment Setup Verification
@@ -54,8 +60,6 @@ Container names
 Port mappings
 Data flows
 Any additional services (like the AI model integration)
-
-
 
 
 Task Distribution Plan
