@@ -33,8 +33,6 @@ Link:
 2. 
 
 
-Development Environment Setup Verification
-
 
 # Development Environment Setup Verification
 
