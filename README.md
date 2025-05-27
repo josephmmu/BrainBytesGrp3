@@ -29,8 +29,10 @@ BrainBytes is an AI-powered tutoring platform designed to provide accessible aca
 
 Link:
 
-1. Launch the platformby clicking the link
-2. 
+1. Launch the platformby clicking the link above, it should bring you directly to the platform
+2. Type in any topic or question of your choice for th platform to answer.
+Note: It can answer school related questions, some may vary
+3. Once you input your question, the platform will automatically find the answer to your question based on the information it gathered.
 
 
 
