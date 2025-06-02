@@ -52,8 +52,7 @@ Note: It can answer school related questions, some may vary
 
 
 Sample Architecture (Initial)
-
-![BrainBytes Container Diagram drawio](https://github.com/user-attachments/assets/2acaf8d7-5e71-4b90-8042-f574fefad649)
+![BrainBytes Container Diagram drawio](https://github.com/user-attachments/assets/19fde200-00ca-4d2e-bb52-41c4945edf50)
 
 Your diagram should be slightly more detailed and include:
 Container names
