@@ -31,11 +31,41 @@ const messageSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+// User Schema
+const userSchema = new mongoose.Schema({
+  email:String,
+  password:String,
+  mainSubject:String 
+});
+
+const User = mongoose.model('User', userSchema);
 const Message = mongoose.model('Message', messageSchema);
 
 // API Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the BrainBytes API' });
+});
+
+
+
+app.get('api/')
+
+// Login Route
+app.post('api/login', async (req, res) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    // Create new User 
+    user = new User({ email, password });
+    await user.save();
+    return res.status(201).json({message: 'User created', token: 'sample-token'});
+  } else {
+    // For now, just accept any passwowrd
+    if (user.password == password) {
+      return res.status(200).json({message: 'Login Successful', token: 'sample-token'});
+    } else {
+      return res.status(401).json({message: 'Invalid credentials'});
+    }
+  }
 });
 
 // Get all messages
