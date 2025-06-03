@@ -25,9 +25,15 @@ BrainBytes is an AI-powered tutoring platform designed to provide accessible aca
 - Monitoring: Prometheus & Grafana
 
 
+## How to use the Tutoring Platform
 
+Link:
 
-Development Environment Setup Verification
+1. Launch the platform by clicking the link above, it should bring you directly to the platform
+2. Type in any topic or question of your choice for th platform to answer.
+Note: It can answer school related questions, some may vary
+3. Once you input your question, the platform will automatically find the answer to your question based on the information it gathered.
+
 
 
 # Development Environment Setup Verification
@@ -46,16 +52,13 @@ Development Environment Setup Verification
 
 
 Sample Architecture (Initial)
-
-![BrainBytes Container Diagram drawio](https://github.com/user-attachments/assets/2acaf8d7-5e71-4b90-8042-f574fefad649)
+![BrainBytes Container Diagram drawio](https://github.com/user-attachments/assets/19fde200-00ca-4d2e-bb52-41c4945edf50)
 
 Your diagram should be slightly more detailed and include:
 Container names
 Port mappings
 Data flows
 Any additional services (like the AI model integration)
-
-
 
 
 Task Distribution Plan

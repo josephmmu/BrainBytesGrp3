@@ -8,6 +8,9 @@ services:
     volumes:
       - ./frontend:/usr/src/app
       - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
     depends_on:
       - backend
     restart: unless-stopped
@@ -15,6 +18,7 @@ services:
   # Backend API container
   backend:
     build: ./backend
+    # command: sh -c "node seedUser.js && node server.js"  # Runs seed first
     ports:
       - "3000:3000"
     volumes:
