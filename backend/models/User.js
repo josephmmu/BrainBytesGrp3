@@ -10,6 +10,14 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true
+  },  
+  name: {
+    type: String,
+    required: true
+  },
+  preferredSubjects: {
+    type: [String], // Array of subjects
+    default: []
   },
   createdAt: {
     type: Date,
