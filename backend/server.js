@@ -38,7 +38,15 @@ const userSchema = new mongoose.Schema({
   mainSubject:String 
 });
 
+// Learning Material Schema
+const learningMaterialSchema = new mongoose.Schema({
+  subject:String, 
+  topic:String, 
+  content:String
+});
+
 const User = mongoose.model('User', userSchema);
+const LearningMaterial = mongoose.model('LearningMaterial', learningMaterialSchema);
 const Message = mongoose.model('Message', messageSchema);
 
 // API Routes
@@ -122,6 +130,42 @@ app.post('/api/messages', async (req, res) => {
     console.error('Error in /api/messages route:', err);
     res.status(400).json({ error: err.message });
   }
+});
+
+// Create a new user profile
+app.post('/userprofiles', async (req, res) => {
+  try {
+    const { name, preferredSubjects } = req.body;
+    const userProfile = new User({ name, preferredSubjects });
+    await userProfile.save();
+    res.status(201).json(userProfile);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Get all user profiles
+app.get('/userprofiles', async (req, res) => {
+  const userProfiles = await User.find();
+  res.json(userProfiles);
+});
+
+// Create a learning material
+app.post('/learningmaterials', async (req, res) => {
+  try {
+    const { subject, topic, content } = req.body;
+    const learningMaterial = new LearningMaterial({ subject, topic, content });
+    await learningMaterial.save();
+    res.status(201).json(learningMaterial);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Get all learning materials
+app.get('/learningmaterials', async (req, res) => {
+  const learningMaterials = await LearningMaterial.find();
+  res.json(learningMaterials);
 });
 
 // Start the server
