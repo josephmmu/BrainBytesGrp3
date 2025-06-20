@@ -1,20 +1,25 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 
+
 import LoginModal from './components/loginModal.js'; // Adjust path as needed
+import { AuthContext } from "./context/AuthContext.js";
 
 export default function Home() {
 
 const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [isTyping, setIsTyping] = useState(false);
-  const messageEndRef = useRef(null);
+const [newMessage, setNewMessage] = useState('');
+const [Cloading, setLoading] = useState(true);
+const [isTyping, setIsTyping] = useState(false);
+const messageEndRef = useRef(null);
+const { user, loading } = useContext(AuthContext);
 
-  const [showModal, setShowModal] = useState(false);
+const [showModal, setShowModal] = useState(false);
+
+const [userEmail, setUserEmail] = useState('');
 
   // Fetch messages from the API
   const fetchMessages = async () => {
@@ -71,6 +76,14 @@ const [messages, setMessages] = useState([]);
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('email');
+    setUserEmail('');
+    
+    setShowModal(true);
+  };
+
   // Scroll to bottom when messages change
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,20 +94,50 @@ const [messages, setMessages] = useState([]);
     fetchMessages();
   }, []);
 
-  
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const email = localStorage.getItem('email');
+    if (token && email) {
+      setUserEmail(email);
+    } else {
+      setShowModal(true);
+    }
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', fontFamily: 'Nunito, sans-serif' }}>
       <h1 style={{ textAlign: 'center', color: '#333' }}>BrainBytes AI Tutor</h1>
       
+      <div className="flex justify-end items-center mb-4">
+        {user ? (
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-700">Hello, {user.email}</span>
+            <button 
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-3 py-1 rounded text-sm"
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <button 
+            onClick={() => setShowModal(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Login
+          </button>
+        )}
+      </div>
+
       <div>
-      {/* Your existing content */}
-      <button 
+      {/* <button 
         onClick={() => setShowModal(true)}
         className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded"
       >
         Login
-      </button>
+      </button> */}
 
       <LoginModal 
         isOpen={showModal} 
@@ -115,7 +158,7 @@ const [messages, setMessages] = useState([]);
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}
       >
-        {loading ? (
+        {Cloading ? (
           <div style={{ textAlign: 'center', padding: '20px' }}>
             <p>Loading conversation history...</p>
           </div>

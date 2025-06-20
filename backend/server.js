@@ -59,20 +59,43 @@ app.get('/', (req, res) => {
 app.get('api/')
 
 // Login Route
-app.post('api/login', async (req, res) => {
-  const user = await User.findOne({ email });
-  if (!user) {
-    // Create new User 
-    user = new User({ email, password });
-    await user.save();
-    return res.status(201).json({message: 'User created', token: 'sample-token'});
-  } else {
-    // For now, just accept any passwowrd
-    if (user.password == password) {
-      return res.status(200).json({message: 'Login Successful', token: 'sample-token'});
-    } else {
-      return res.status(401).json({message: 'Invalid credentials'});
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: 'No account found. Please register first.' });
     }
+
+    // In a real app, compare hashed passwords
+    if (user.password !== password) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Return a placeholder token (replace with real JWT if needed)
+    return res.status(200).json({ message: 'Login successful', token: 'sample-token' });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+//register
+app.post('/api/register', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already in use' });
+    }
+
+    const newUser = new User({ email, password });
+    await newUser.save();
+
+    return res.status(201).json({ message: 'User registered successfully' });
+  } catch (err) {
+    return res.status(500).json({ message: 'Registration failed', error: err.message });
   }
 });
 
