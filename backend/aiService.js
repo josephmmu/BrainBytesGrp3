@@ -1,8 +1,39 @@
 const fetch = require('node-fetch');
+require('dotenv').config({ path: '../.env' });;
+
+console.log(process.env);
+
+const { GoogleGenAI } = require("@google/genai");
+const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
+
+
 
 // Basic word list
 const positiveWords = ['good', 'great', 'happy', 'excellent', 'amazing', 'love', 'fantastic', 'like', 'nice', 'awesome'];
 const negativeWords = ['bad', 'terrible', 'sad', 'awful', 'hate', 'horrible', 'worst', 'angry', 'dislike', 'frustrated'];
+
+// New Gemini-based response function
+async function generateResponse(question) {
+  try {
+    const result = await ai.models.generateContent({
+      model: "gemini-2.0-flash", // or "gemini-2.0-flash" if you're on early access
+      contents: [question],
+    });
+
+    const output = result.text;
+
+    return {
+      category: 'general',
+      response: output || "Sorry, I couldn't generate a response.",
+    };
+  } catch (error) {
+    console.error("Error calling Gemini API:", error);
+    return {
+      category: "general",
+      response: "Sorry, I couldn't get a response from Gemini. Please try again later.",
+    };
+  }
+}
 
 // Initialize our AI service
 const initializeAI = () => {
@@ -15,7 +46,7 @@ const initializeAI = () => {
 };
 
 // Function to get response from Hugging Face API
-async function generateResponse(question) {
+async function generateResponseG(question) {
   // Define categories based on content
   const lowerQuestion = question.toLowerCase();
 
@@ -141,7 +172,7 @@ async function generateResponse(question) {
 
     // Use AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 5 second timeout
 
     // Make the API request with authentication and timeout
     const response = await fetch(API_URL, {

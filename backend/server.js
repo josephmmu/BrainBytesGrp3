@@ -2,9 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const aiService = require('./aiService');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const JWT_SECRET = 'ooosecretkeeyy1';
 
 // Middleware
 app.use(cors());
@@ -26,6 +29,7 @@ mongoose.connect('mongodb://mongo:27017/brainbytes', {
 
 // Define schemas
 const messageSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
   text: String,
   isUser: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
@@ -73,8 +77,20 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Return a placeholder token (replace with real JWT if needed)
-    return res.status(200).json({ message: 'Login successful', token: 'sample-token' });
+    // Generating token with user info
+    const token = jwt.sign(
+      { id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d'}
+    );
+
+    // Return with jwt token
+    return res.status(200).json({ 
+      message: 'Login successful', 
+      token, 
+      user: {
+        id: user._id,
+        email: user.email,
+        mainSubject: user.mainSubject || null
+      }});
   } catch (err) {
     return res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -101,21 +117,47 @@ app.post('/api/register', async (req, res) => {
 
 // Get all messages
 app.get('/api/messages', async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorized '});
+  }
+
+  const token = authHeader.split(' ')[1];
+
   try {
-    const messages = await Message.find().sort({ createdAt: 1 });
+    const decoded = jwt.verify(token,  JWT_SECRET);
+    const messages = await Message.find({ userId: decoded.id}).sort({ createdAt: 1 });
     res.json(messages);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(401).json({ message: 'Invalid Token' });
   }
 });
 
 // Create a new message and get AI response
 app.post('/api/messages', async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorized '});
+  }
+
+  const token = authHeader.split(' ')[1];
+  let userId;
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.id;
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid Token' });
+  }
+
   try {
     // Save user message
     const userMessage = new Message({
       text: req.body.text,
-      isUser: true
+      isUser: true,
+      userId
     });
     await userMessage.save();
     
@@ -124,22 +166,20 @@ app.post('/api/messages', async (req, res) => {
       setTimeout(() => reject(new Error('Request timeout')), 15000)
     );
     
-    const aiResultPromise = aiService.generateResponse(req.body.text);
-    
     // Race between the AI response and the timeout
-    const aiResult = await Promise.race([aiResultPromise, timeoutPromise])
-      .catch(error => {
-        console.error('AI response timed out or failed:', error);
-        return {
+    const aiResult = await Promise.race([
+      aiService.generateResponse(req.body.text),
+       timeoutPromise])
+      .catch(error => ({
           category: 'error',
           response: "I'm sorry, but I couldn't process your request in time. Please try again with a simpler question."
-        };
-      });
+        }));
     
     // Save AI response
     const aiMessage = new Message({
       text: aiResult.response,
-      isUser: false
+      isUser: false,
+      userId
     });
     await aiMessage.save();
     
@@ -153,6 +193,25 @@ app.post('/api/messages', async (req, res) => {
     console.error('Error in /api/messages route:', err);
     res.status(400).json({ error: err.message });
   }
+});
+
+app.get('/api/auth/me', async (req, res) => {
+  const authHeader = req.headers.authorization;
+ 
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Missing Token'});
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+    return res.status(200).json({ id: decoded.id, email: decoded.email });
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+
 });
 
 // Create a new user profile
