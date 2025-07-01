@@ -9,15 +9,15 @@ const PORT = process.env.PORT || 3000;
 
 const JWT_SECRET = 'ooosecretkeeyy1';
 
-app.use(cors());
-app.use(express.json());
-
 process.on('uncaughtException', err => {
   console.error('Uncaught Exception:', err);
 });
 process.on('unhandledRejection', err => {
   console.error('Unhandled Rejection:', err);
 });
+
+app.use(cors());
+app.use(express.json());
 
 // Initialize AI model
 aiService.initializeAI();
