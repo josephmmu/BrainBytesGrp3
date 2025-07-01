@@ -5,7 +5,7 @@ const aiService = require('./aiService');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const PORT = process.env.PORT || 443;
+const PORT = process.env.PORT || 3000;
 
 const JWT_SECRET = 'ooosecretkeeyy1';
 
