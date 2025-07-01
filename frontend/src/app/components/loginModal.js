@@ -17,33 +17,58 @@ export default function LoginModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  // In LoginModal.js
-  const handleLogin = async () => {
-    try {
-      const res = await axios.post('https://brainbytesgrp3-backend-production.up.railway.app/api/login', {email, password});
+ const handleLogin = async () => {
+  try {
+    const res = await axios.post('https://brainbytesgrp3-backend-production.up.railway.app/api/login', {
+      email,
+      password
+    });
 
-      const token = res.data.token;
-      login(token);  // this updates context
-      onClose();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Login failed');
-      console.error(err);
-    }
-  };
+    const token = res.data.token;
+    login(token); // Updates context
 
-  // Register
-  const handleRegister = async () => {
-    try {
-      await axios.post('https://brainbytesgrp3-backend-production.up.railway.app/api/register', { email, password });
-      const loginRes = await axios.post('https://brainbytesgrp3-backend-production.up.railway.app/api/login', { email, password });
-      // localStorage.setItem('token', loginRes.data.token);
-      login(loginRes.data.token);
-      onClose();
-    } catch (error) {
-      alert('Registration Failed');
-      console.error(error);
+  } catch (err) {
+    if (err.response && err.response.status === 401) {
+      alert("Invalid credentials or account not registered.");
+    } else {
+      console.error("Login error:", err);
+      alert("An unexpected error occurred. Please try again later.");
     }
-  };
+  }
+};
+
+const handleRegister = async () => {
+  try {
+    // Attempt to register
+    await axios.post('https://brainbytesgrp3-backend-production.up.railway.app/api/register', {
+      email,
+      password
+    });
+
+    // Automatically log in after successful registration
+    const loginRes = await axios.post('https://brainbytesgrp3-backend-production.up.railway.app/api/login', {
+      email,
+      password
+    });
+
+    login(loginRes.data.token); // update context
+    onClose();
+
+  } catch (err) {
+    if (err.response) {
+      // Backend responded with error status (400, etc.)
+      const message = err.response.data?.message || 'Registration failed';
+      alert(message);
+    } else if (err.request) {
+      // No response from server
+      alert('No response from server. Please try again later.');
+    } else {
+      // Error setting up request
+      alert('An unexpected error occurred.');
+    }
+    console.error(err);
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center">
