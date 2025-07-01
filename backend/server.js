@@ -258,5 +258,5 @@ app.get('/learningmaterials', async (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(` HTTP Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
