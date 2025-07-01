@@ -253,7 +253,7 @@ app.get('/learningmaterials', async (req, res) => {
 // Start the server
 try {
   console.log('✅ Setup complete, starting server...');
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server running on port ${PORT}`);
   });
 } catch (err) {
