@@ -9,12 +9,6 @@ const PORT = process.env.PORT || 3000;
 
 const JWT_SECRET = 'ooosecretkeeyy1';
 
-// // Middleware
-// app.use(cors({
-//   origin: ['http://localhost:8080', 'https://under-collectors.gl.at.ply.gg:25239','https://147.185.221.27:25239'], // Add your frontend URL here
-//   credentials: true
-// }));
-
 app.use(cors());
 app.use(express.json());
 
@@ -257,6 +251,11 @@ app.get('/learningmaterials', async (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+try {
+  console.log('✅ Setup complete, starting server...');
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+  });
+} catch (err) {
+  console.error('❌ Error starting server:', err);
+}
