@@ -30,8 +30,19 @@ mongoose.connect(process.env.mongodbURL, {
   retryWrites: true
 }).then(() => {
   console.log('Connected to MongoDB');
+
+ // Start the server
+try {
+  console.log('✅ Setup complete, starting server...');
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server running on port ${PORT}`);
+  });
+} catch (err) {
+  console.error('❌ Error starting server:', err);
+}
 }).catch(err => {
-  console.error('Failed to connect to MongoDB:', err);
+  console.error('❌ Failed to connect to MongoDB:', err);
+  process.exit(1); // crash container clearly
 });
 
 // Define schemas
@@ -259,12 +270,3 @@ app.get('/learningmaterials', async (req, res) => {
 
 
 
-// Start the server
-try {
-  console.log('✅ Setup complete, starting server...');
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Server running on port ${PORT}`);
-  });
-} catch (err) {
-  console.error('❌ Error starting server:', err);
-}
