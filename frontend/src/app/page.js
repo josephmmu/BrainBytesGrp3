@@ -24,9 +24,6 @@ const [showModal, setShowModal] = useState(false);
 
 const { user } = useAuth();
 
-const [loginEmail, setLoginEmail] = useState('');
-const [loginPassword, setLoginPassword] = useState('');
-
 const [selectedSubject, setSelectedSubject ] = useState('General');
 
   
@@ -37,7 +34,7 @@ const [selectedSubject, setSelectedSubject ] = useState('General');
       const token = localStorage.getItem('token');
       console.log("Token being sent: ", token);
       console.log("User from context: ", user);
-      const response = await axios.get('https://147.185.221.29:55244/api/messages', { headers: { Authorization: `Bearer ${token}`}});
+      const response = await axios.get('https://brainbytesgrp3-backend-production.up.railway.app/api/messages', { headers: { Authorization: `Bearer ${token}`}});
       setMessages(response.data);
       setLoading(false);
     } catch (error) {
@@ -68,7 +65,7 @@ const [selectedSubject, setSelectedSubject ] = useState('General');
       
       // Send to backend and get AI response
       const response = await axios.post(
-        'https://147.185.221.29:55244/api/messages', 
+        'https://brainbytesgrp3-backend-production.up.railway.app/api/messages', 
         { text: userMsg, subject: selectedSubject },
         { headers: { Authorization: `Bearer ${token}`}});
       

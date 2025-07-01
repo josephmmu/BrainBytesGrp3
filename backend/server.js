@@ -4,38 +4,10 @@ const cors = require('cors');
 const aiService = require('./aiService');
 const jwt = require('jsonwebtoken');
 
-const fs = require('fs');
-const https = require('https');
-const path = require('path');
-
 const app = express();
 const PORT = process.env.PORT || 443;
 
 const JWT_SECRET = 'ooosecretkeeyy1';
-
-const certPath = path.resolve(__dirname, 'cert/server.cert');
-const keyPath = path.resolve(__dirname, 'cert/server.key');
-
-console.log('Trying to read cert from:', certPath);
-console.log('Trying to read key from:', keyPath);
-
-let privateKey, certificate;
-
-try {
-  privateKey = fs.readFileSync(keyPath, 'utf8');
-  certificate = fs.readFileSync(certPath, 'utf8');
-  console.log('✅ Certificates loaded successfully.');
-} catch (err) {
-  console.error('❌ Error loading SSL certificates:', err.message);
-  process.exit(1); // Stop the server if certs aren't loaded
-}
-
-const credentials = { key: privateKey, cert: certificate };
-
-// Create HTTPS server
-const httpsServer = https.createServer(credentials, app);
-
-
 
 // // Middleware
 // app.use(cors({
@@ -43,16 +15,15 @@ const httpsServer = https.createServer(credentials, app);
 //   credentials: true
 // }));
 
-app.use(cors({
-  origin: '*', // or use specific origin like 'https://abc123.playit.gg'
-}));
+app.use(cors());
 app.use(express.json());
 
 // Initialize AI model
 aiService.initializeAI();
 
 // Connect to MongoDB
-mongoose.connect('mongodb://mongo:27017/brainbytes', {
+//mongoose.connect('mongodb://mongo:27017/brainbytes', {
+mongoose.connect(process.env.mongodbURL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   retryWrites: true
@@ -93,10 +64,6 @@ const Message = mongoose.model('Message', messageSchema);
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the BrainBytes API' });
 });
-
-
-
-app.get('api/')
 
 // Login Route
 app.post('/api/login', async (req, res) => {
@@ -290,6 +257,6 @@ app.get('/learningmaterials', async (req, res) => {
 });
 
 // Start the server
-https.createServer(credentials, app).listen(PORT, () => {
-  console.log(` HTTPS Server running at https://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(` HTTP Server running at http://localhost:${PORT}`);
 });
