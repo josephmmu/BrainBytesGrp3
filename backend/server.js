@@ -4,13 +4,48 @@ const cors = require('cors');
 const aiService = require('./aiService');
 const jwt = require('jsonwebtoken');
 
+const fs = require('fs');
+const https = require('https');
+const path = require('path');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 443;
 
 const JWT_SECRET = 'ooosecretkeeyy1';
 
-// Middleware
-app.use(cors());
+const certPath = path.resolve(__dirname, 'cert/server.cert');
+const keyPath = path.resolve(__dirname, 'cert/server.key');
+
+console.log('Trying to read cert from:', certPath);
+console.log('Trying to read key from:', keyPath);
+
+let privateKey, certificate;
+
+try {
+  privateKey = fs.readFileSync(keyPath, 'utf8');
+  certificate = fs.readFileSync(certPath, 'utf8');
+  console.log('✅ Certificates loaded successfully.');
+} catch (err) {
+  console.error('❌ Error loading SSL certificates:', err.message);
+  process.exit(1); // Stop the server if certs aren't loaded
+}
+
+const credentials = { key: privateKey, cert: certificate };
+
+// Create HTTPS server
+const httpsServer = https.createServer(credentials, app);
+
+
+
+// // Middleware
+// app.use(cors({
+//   origin: ['http://localhost:8080', 'https://under-collectors.gl.at.ply.gg:25239','https://147.185.221.27:25239'], // Add your frontend URL here
+//   credentials: true
+// }));
+
+app.use(cors({
+  origin: '*', // or use specific origin like 'https://abc123.playit.gg'
+}));
 app.use(express.json());
 
 // Initialize AI model
@@ -32,6 +67,7 @@ const messageSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
   text: String,
   isUser: { type: Boolean, default: true },
+  subject: String,
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -137,6 +173,7 @@ app.get('/api/messages', async (req, res) => {
 // Create a new message and get AI response
 app.post('/api/messages', async (req, res) => {
   const authHeader = req.headers.authorization;
+  const { text, subject } = req.body
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Unauthorized '});
@@ -155,9 +192,10 @@ app.post('/api/messages', async (req, res) => {
   try {
     // Save user message
     const userMessage = new Message({
-      text: req.body.text,
+      text,
       isUser: true,
-      userId
+      userId,
+      subject
     });
     await userMessage.save();
     
@@ -168,7 +206,7 @@ app.post('/api/messages', async (req, res) => {
     
     // Race between the AI response and the timeout
     const aiResult = await Promise.race([
-      aiService.generateResponse(req.body.text),
+      aiService.generateResponse(text, subject),
        timeoutPromise])
       .catch(error => ({
           category: 'error',
@@ -179,7 +217,8 @@ app.post('/api/messages', async (req, res) => {
     const aiMessage = new Message({
       text: aiResult.response,
       isUser: false,
-      userId
+      userId,
+      subject
     });
     await aiMessage.save();
     
@@ -251,6 +290,6 @@ app.get('/learningmaterials', async (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+https.createServer(credentials, app).listen(PORT, () => {
+  console.log(` HTTPS Server running at https://localhost:${PORT}`);
 });

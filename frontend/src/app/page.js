@@ -27,6 +27,8 @@ const { user } = useAuth();
 const [loginEmail, setLoginEmail] = useState('');
 const [loginPassword, setLoginPassword] = useState('');
 
+const [selectedSubject, setSelectedSubject ] = useState('General');
+
   
 
   // Fetch messages from the API
@@ -35,7 +37,7 @@ const [loginPassword, setLoginPassword] = useState('');
       const token = localStorage.getItem('token');
       console.log("Token being sent: ", token);
       console.log("User from context: ", user);
-      const response = await axios.get('http://localhost:3000/api/messages', { headers: { Authorization: `Bearer ${token}`}});
+      const response = await axios.get('https://147.185.221.29:55244/api/messages', { headers: { Authorization: `Bearer ${token}`}});
       setMessages(response.data);
       setLoading(false);
     } catch (error) {
@@ -66,8 +68,8 @@ const [loginPassword, setLoginPassword] = useState('');
       
       // Send to backend and get AI response
       const response = await axios.post(
-        'http://localhost:3000/api/messages', 
-        { text: userMsg },
+        'https://147.185.221.29:55244/api/messages', 
+        { text: userMsg, subject: selectedSubject },
         { headers: { Authorization: `Bearer ${token}`}});
       
       // Replace the temporary message with the actual one and add AI response
@@ -244,6 +246,20 @@ const [loginPassword, setLoginPassword] = useState('');
           }}
           disabled={isTyping}
         />
+        <label className="mr-r text-sm font-semibold">Choose Subject: </label>
+
+        <select 
+        value={ selectedSubject }
+        onChange={(e) => setSelectedSubject(e.target.value)}
+        className="border px-2 py-1 rounded">
+            <option value="General">General </option>
+            <option value="Math">Math </option>
+            <option value="Science">Science </option>
+            <option value="History">History </option>
+
+
+        </select>
+
         <button 
           type="submit" 
           style={{ 

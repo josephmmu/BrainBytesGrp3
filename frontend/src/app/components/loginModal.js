@@ -20,7 +20,7 @@ export default function LoginModal({ isOpen, onClose }) {
   // In LoginModal.js
   const handleLogin = async () => {
     try {
-      const res = await axios.post('http://localhost:3000/api/login', {email, password});
+      const res = await axios.post('https://147.185.221.29:55244/api/login', {email, password});
 
       const token = res.data.token;
       login(token);  // this updates context
@@ -34,8 +34,8 @@ export default function LoginModal({ isOpen, onClose }) {
   // Register
   const handleRegister = async () => {
     try {
-      await axios.post('http://localhost:3000/api/register', { email, password });
-      const loginRes = await axios.post('http://localhost:3000/api/login', { email, password });
+      await axios.post('https://147.185.221.29:55244/api/register', { email, password });
+      const loginRes = await axios.post('https://147.185.221.29:55244/api/login', { email, password });
       // localStorage.setItem('token', loginRes.data.token);
       login(loginRes.data.token);
       onClose();
