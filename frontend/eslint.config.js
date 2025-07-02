@@ -1,13 +1,19 @@
-// eslint.config.js (for ESLint v9+ + Next.js)
-import next from 'eslint-config-next';
+import js from '@eslint/js';
+import react from 'eslint-plugin-react';
 
 export default [
-  ...next(), // Import Next.js recommended rules
   {
+    files: ['**/*.js', '**/*.jsx'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+    },
+    plugins: { react },
     rules: {
-      semi: ['error', 'always'],
-      quotes: ['error', 'single'],
+      ...react.configs.recommended.rules,
       'no-console': 'warn',
+      quotes: ['error', 'single'],
+      semi: ['error', 'always'],
     },
   },
 ];
