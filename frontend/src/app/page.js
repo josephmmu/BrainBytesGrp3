@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import Image from "next/image";
+import Image from 'next/image';
 import { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
-import { useAuth } from "./context/AuthContext.js";
+import { useAuth } from './context/AuthContext.js';
 
 
 
 import LoginModal from './components/loginModal.js'; // Adjust path as needed
-import { AuthContext } from "./context/AuthContext.js";
+import { AuthContext } from './context/AuthContext.js';
 
 export default function Home() {
 
@@ -32,8 +32,8 @@ const [selectedSubject, setSelectedSubject ] = useState('General');
   const fetchMessages = async () => {
     try {
       const token = localStorage.getItem('token');
-      console.log("Token being sent: ", token);
-      console.log("User from context: ", user);
+      console.log('Token being sent: ', token);
+      console.log('User from context: ', user);
       const response = await axios.get('https://brainbytesgrp3-backend-production.up.railway.app/api/messages', { headers: { Authorization: `Bearer ${token}`}});
       setMessages(response.data);
       setLoading(false);
@@ -81,7 +81,7 @@ const [selectedSubject, setSelectedSubject ] = useState('General');
       // Show error in chat
       setMessages(prev => [...prev, {
         _id: Date.now().toString(),
-        text: "Sorry, I couldn't process your request. Please try again later.",
+        text: 'Sorry, I couldn\'t process your request. Please try again later.',
         isUser: false,
         createdAt: new Date().toISOString()
       }]);

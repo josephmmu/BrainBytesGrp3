@@ -13,7 +13,7 @@ export default function LoginModal({ isOpen, onClose }) {
       setEmail('');
       setPassword('');
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -29,10 +29,10 @@ export default function LoginModal({ isOpen, onClose }) {
 
   } catch (err) {
     if (err.response && err.response.status === 401) {
-      alert("Invalid credentials or account not registered.");
+      alert('Invalid credentials or account not registered.');
     } else {
-      console.error("Login error:", err);
-      alert("An unexpected error occurred. Please try again later.");
+      console.error('Login error:', err);
+      alert('An unexpected error occurred. Please try again later.');
     }
   }
 };
