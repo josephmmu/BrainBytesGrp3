@@ -34,14 +34,14 @@ services:
       - mongo
     restart: unless-stopped
 
-  # MongoDB container
-  mongo:
-    image: mongo:4.4
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-    restart: unless-stopped
+  # MongoDB container Since we are using mongodb atlas
+  # mongo:
+  #   image: mongo:4.4
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo-data:/data/db
+  #   restart: unless-stopped
 
 # Define volumes for persistent data
 volumes:
