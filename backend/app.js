@@ -147,4 +147,4 @@ app.get('/learningmaterials', async (_, res) => {
   res.json(learningMaterials);
 });
 
-module.exports = app;
+export default app;
