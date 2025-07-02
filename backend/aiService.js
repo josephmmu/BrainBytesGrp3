@@ -1,6 +1,6 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
-const { GoogleGenAI } = require("@google/genai");
+import { GoogleGenAI } from "@google/genai";
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
 
@@ -384,7 +384,7 @@ function getDetailedResponse(category, question) {
   return "I'm not sure I understand your question completely. Could you please provide more details or rephrase it? I can help with topics related to science, math, history, and general knowledge.";
 }
 
-module.exports = {
+export default {
   initializeAI,
   generateResponse
 };

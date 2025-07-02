@@ -12,9 +12,33 @@ app.use(cors());
 app.use(express.json());
 
 // Models
-const User = require('./models/User');
-const Message = require('./models/Message');
-const LearningMaterial = require('./models/LearningMaterial');
+const messageSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
+  text: String,
+  isUser: { type: Boolean, default: true },
+  subject: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
+// User Schema
+const userSchema = new mongoose.Schema({
+  email:String,
+  password:String,
+  mainSubject:String 
+});
+
+// Learning Material Schema
+const learningMaterialSchema = new mongoose.Schema({
+  subject:String, 
+  topic:String, 
+  content:String
+});
+
+const User = mongoose.model('User', userSchema);
+const LearningMaterial = mongoose.model('LearningMaterial', learningMaterialSchema);
+const Message = mongoose.model('Message', messageSchema);
+
+
 
 // Initialize AI
 aiService.initializeAI();
