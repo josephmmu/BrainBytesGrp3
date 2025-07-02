@@ -1,9 +1,9 @@
 // backend/app.js
-const express = require('express');
-const cors = require('cors');
-const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
-const aiService = require('./aiService');
+import express from 'express';
+import cors from 'cors';
+import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
+import aiService from './aiService.js';
 
 const app = express();
 const JWT_SECRET = 'ooosecretkeeyy1';
