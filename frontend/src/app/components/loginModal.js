@@ -1,4 +1,5 @@
 // components/LoginModal.js
+import React from 'react';
 import { useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
