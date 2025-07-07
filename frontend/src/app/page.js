@@ -1,12 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { useAuth } from './context/AuthContext.js';
-
-
-
 import LoginModal from './components/loginModal.js'; // Adjust path as needed
 import { AuthContext } from './context/AuthContext.js';
 
@@ -17,16 +13,10 @@ const [newMessage, setNewMessage] = useState('');
 const [Cloading, setLoading] = useState(true);
 const [isTyping, setIsTyping] = useState(false);
 const messageEndRef = useRef(null);
-//const { user, loading } = useContext(AuthContext);
 const { logout } = useContext(AuthContext);
-
 const [showModal, setShowModal] = useState(false);
-
 const { user } = useAuth();
-
 const [selectedSubject, setSelectedSubject ] = useState('General');
-
-  
 
   // Fetch messages from the API
   const fetchMessages = async () => {
