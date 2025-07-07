@@ -123,20 +123,21 @@ jobs:
           docker-compose -f docker-compose.yml up -d
           docker-compose ps
           docker-compose down
-
-  
-# Add to the existing workflow
   deploy:
     needs: [build]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+  
       - name: Install Railway CLI
-        run: npm i -g @railway/cli
-      
+        run: npm install -g @railway/cli
+  
       - name: Deploy to Railway
         uses: railwayapp/railway-action@v1
         with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: ${{ secrets.RAILWAY_SERVICE_ID }}
+          railwayToken: ${{ secrets.RAILWAY_TOKEN }}
+          serviceId: ${{ secrets.RAILWAY_SERVICE_ID }}
+
 
