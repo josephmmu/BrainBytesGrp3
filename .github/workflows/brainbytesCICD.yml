@@ -103,6 +103,12 @@ jobs:
           tags: brainbytes/backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Create .env file for Docker Compose
+        run: |
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "HUGGINGFACE_TOKEN=${{ secrets.HUGGINGFACE_TOKEN }}" >> .env
       
       - name: Test Docker Compose
         run: |
