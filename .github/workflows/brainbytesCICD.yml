@@ -104,6 +104,14 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get remove -y docker-compose || true
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
       - name: Create .env file for Docker Compose
         run: |
           echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
