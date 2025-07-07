@@ -30,8 +30,6 @@ services:
       - ./backend:/usr/src/app
     environment:
       - HUGGINGFACE_TOKEN=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
-    depends_on:
-      - mongo
     restart: unless-stopped
 
   # MongoDB container Since we are using mongodb atlas
