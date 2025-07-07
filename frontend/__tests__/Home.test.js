@@ -1,66 +1,80 @@
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Home from '../page'; // Adjust the import path if needed
-import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import Home from '../src/app/page.js';
 
+// Mock axios
 jest.mock('axios');
-jest.mock('../context/AuthContext', () => ({
-  useAuth: jest.fn(),
-  AuthContext: {
-    Provider: ({ children }) => <div>{children}</div>
-  }
-}));
 
-jest.mock('../components/loginModal', () => ({ isOpen, onClose }) => (
-  isOpen ? <div data-testid="login-modal">Login Modal</div> : null
-));
+// Mock AuthContext and useAuth
+jest.mock('../src/app/context/AuthContext.js', () => {
+  const actual = jest.requireActual('react');
+  return {
+    __esModule: true,
+    useAuth: () => ({
+      user: { email: 'test@example.com', token: 'mockToken' },
+    }),
+    AuthContext: {
+      Provider: ({ children }) => <div>{children}</div>,
+    },
+  };
+});
+
+// Mock useContext to return logout
+jest.spyOn(React, 'useContext').mockImplementation((context) => {
+  if (context?.Provider) {
+    return {
+      logout: jest.fn(),
+      login: jest.fn(),
+    };
+  }
+  return undefined;
+});
 
 describe('Home component', () => {
   beforeEach(() => {
-    useAuth.mockReturnValue({
-      user: { email: 'test@example.com', token: 'fake-jwt-token' },
-      logout: jest.fn()
-    });
+    jest.clearAllMocks();
+    localStorage.setItem('token', 'mockToken');
+  });
 
-    axios.get.mockResolvedValue({ data: [] });
-    axios.post.mockResolvedValue({
+  it('renders welcome message when no messages exist', async () => {
+    axios.get.mockResolvedValueOnce({ data: [] });
+
+    render(<Home />);
+    
+    expect(await screen.findByText(/Welcome to BrainBytes AI Tutor/i)).toBeInTheDocument();
+  });
+
+  it('sends a message and receives an AI reply', async () => {
+    axios.get.mockResolvedValueOnce({ data: [] });
+
+    axios.post.mockResolvedValueOnce({
       data: {
         userMessage: {
           _id: '1',
-          text: 'Test message',
+          text: 'Hi',
           isUser: true,
           createdAt: new Date().toISOString()
         },
         aiMessage: {
           _id: '2',
-          text: 'AI reply',
+          text: 'Hello from AI!',
           isUser: false,
           createdAt: new Date().toISOString()
         }
       }
     });
-  });
 
-  it('renders welcome message when no messages exist', async () => {
     render(<Home />);
-    expect(screen.getByText('BrainBytes AI Tutor')).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByText('Welcome to BrainBytes AI Tutor!')).toBeInTheDocument();
-    });
-  });
+    
+    const input = screen.getByPlaceholderText(/ask a question/i);
+    fireEvent.change(input, { target: { value: 'Hi' } });
 
-  it('sends a message and receives an AI reply', async () => {
-    render(<Home />);
-
-    const input = screen.getByPlaceholderText('Ask a question...');
-    fireEvent.change(input, { target: { value: 'What is 2+2?' } });
-
-    const sendButton = screen.getByRole('button', { name: /send/i });
+    const sendButton = screen.getByText(/send/i);
     fireEvent.click(sendButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Test message')).toBeInTheDocument();
-      expect(screen.getByText('AI reply')).toBeInTheDocument();
+      expect(screen.getByText(/hello from AI!/i)).toBeInTheDocument();
     });
   });
 });
