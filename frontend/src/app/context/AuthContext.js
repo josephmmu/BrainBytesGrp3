@@ -26,43 +26,6 @@ export const AuthProvider = ({ children }) =>  {
 
   }, []);
 
-  // useEffect(() => {
-  //   // Check existing session
-  //   const token = localStorage.getItem('token');
-
-  //   if (token) {
-  //     fetch('http://localhost:3000/api/auth/me', {
-  //       headers: { Authorization: `Bearer ${token}` }
-  //     })
-  //       .then(res => {
-  //         if (!res.ok) throw new Error('Unauthorized');
-  //         return res.json();
-  //       })
-  //       .then(data => setUser(data))
-  //       .catch(() => logout())
-  //       .finally(() => setLoading(false));
-  //   } else {
-  //     setLoading (false);
-  //   }
-  // }, []);
-
-  // const login = async (email, password) => {
-  //   const res = await fetch('http://localhost:3000/api/login', {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({ email, password })
-  //   });
-
-  //   if (!res.ok) {
-  //     const errorData = await res.json();
-  //     throw new Error(errorData.message || 'Login Failed');
-  //   }
-
-  //   const data = await res.json();
-  //   localStorage.setItem('token', data.token);
-  //   setUser(data.user);
-  // };
-
   const login = (token) => {
     localStorage.setItem('token', token);
     const decoded = jwtDecode(token);
