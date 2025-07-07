@@ -28,8 +28,6 @@ services:
       - "3000:3000"
     volumes:
       - ./backend:/usr/src/app
-    environment:
-      - HUGGINGFACE_TOKEN=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
     restart: unless-stopped
 
   # MongoDB container Since we are using mongodb atlas
