@@ -22,10 +22,13 @@ const messageSchema = new mongoose.Schema({
 
 // User Schema
 const userSchema = new mongoose.Schema({
-  email:String,
-  password:String,
-  mainSubject:String 
+  email: String,
+  password: String,
+  mainSubject: String,
+  name: String,
+  preferredSubjects: [String]
 });
+
 
 // Learning Material Schema
 const learningMaterialSchema = new mongoose.Schema({
@@ -40,8 +43,7 @@ const Message = mongoose.model('Message', messageSchema);
 
 
 
-// Initialize AI
-aiService.initializeAI();
+
 
 // Routes
 app.get('/', (req, res) => {
