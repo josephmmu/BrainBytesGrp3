@@ -4,7 +4,7 @@ import app from './app.js';
 
 const PORT = process.env.PORT || 8080;
 
-mongoose.connect(process.env.mongodbURL, {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   retryWrites: true
