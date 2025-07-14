@@ -3,6 +3,7 @@ import React from 'react';
 import { useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import API_BASE_URL from '../../config/api.js';
 
 export default function LoginModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
@@ -20,7 +21,7 @@ export default function LoginModal({ isOpen, onClose }) {
 
  const handleLogin = async () => {
   try {
-    const res = await axios.post('https://brainbytesgrp3-backend-production.up.railway.app/api/login', {
+    const res = await axios.post(`${API_BASE_URL}/api/login`, {
       email,
       password
     });
@@ -41,13 +42,13 @@ export default function LoginModal({ isOpen, onClose }) {
 const handleRegister = async () => {
   try {
     // Attempt to register
-    await axios.post('https://brainbytesgrp3-backend-production.up.railway.app/api/register', {
+    await axios.post(`${API_BASE_URL}/api/register`, {
       email,
       password
     });
 
     // Automatically log in after successful registration
-    const loginRes = await axios.post('https://brainbytesgrp3-backend-production.up.railway.app/api/login', {
+    const loginRes = await axios.post(`${API_BASE_URL}/api/login`, {
       email,
       password
     });

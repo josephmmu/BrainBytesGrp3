@@ -1,4 +1,5 @@
 // backend/server.js
+import './loadEnv.js';
 import mongoose from 'mongoose';
 import app from './app.js';
 
