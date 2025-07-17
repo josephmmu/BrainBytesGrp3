@@ -6,3 +6,7 @@
 Dockerfile
 docker-compose.yml
 *.md
+
+monitoring/*
+!monitoring/prometheus.yml
+!monitoring/alert_rules.yml

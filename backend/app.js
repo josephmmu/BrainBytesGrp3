@@ -4,12 +4,15 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import aiService from './aiService.js';
+import { metricsMiddleware, incrementActiveSessions, decrementActiveSessions } from './basicmetrics.js';
 
 const app = express();
 const JWT_SECRET = 'ooosecretkeeyy1';
 
 app.use(cors());
 app.use(express.json());
+
+app.use(metricsMiddleware);
 
 // Models
 const messageSchema = new mongoose.Schema({
@@ -41,14 +44,24 @@ const User = mongoose.model('User', userSchema);
 const LearningMaterial = mongoose.model('LearningMaterial', learningMaterialSchema);
 const Message = mongoose.model('Message', messageSchema);
 
-
-
-
-
 // Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the BrainBytes API' });
 });
+// For Metrics
+// Your existing routes
+app.get('/api/session/start', (req, res) => {
+  // Start tutoring session logic
+  incrementActiveSessions();
+  res.json({ success: true });
+});
+
+app.get('/api/session/end', (req, res) => {
+  // End tutoring session logic
+  decrementActiveSessions();
+  res.json({ success: true });
+});
+
 
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
