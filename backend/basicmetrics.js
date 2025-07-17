@@ -39,10 +39,7 @@ metricsApp.get('/metrics', async (req, res) => {
   res.end(await register.metrics());
 });
 
-// Start metrics server
-metricsApp.listen(9080, () => {
-  console.log('Metrics server listening on port 9080');
-});
+
 
 // Middleware to track HTTP requests in your main app
 function metricsMiddleware(req, res, next) {

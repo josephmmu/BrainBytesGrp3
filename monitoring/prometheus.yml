@@ -2,9 +2,10 @@ global:
   scrape_interval: 5s  # Scrape every 5 seconds
 
 scrape_configs:
-  - job_name: 'backend'
+  - job_name: 'brainbytes-backend'
+    metrics_path: '/metrics'
     static_configs:
-      - targets: ['backend:9080']
+      - targets: [https://brainbytesgrp3-backend-production.up.railway.app/']
 
   - job_name: 'node-exporter'
     static_configs:

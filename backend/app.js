@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import aiService from './aiService.js';
 import { metricsMiddleware, incrementActiveSessions, decrementActiveSessions } from './basicmetrics.js';
+import client from 'prom-client';
 
 const app = express();
 const JWT_SECRET = 'ooosecretkeeyy1';
@@ -48,6 +49,14 @@ const Message = mongoose.model('Message', messageSchema);
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the BrainBytes API' });
 });
+
+// Serve metrics on same port as main app
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
+
+
 // For Metrics
 // Your existing routes
 app.get('/api/session/start', (req, res) => {
