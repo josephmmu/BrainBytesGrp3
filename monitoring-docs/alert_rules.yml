@@ -1,0 +1,251 @@
+# Alert Rules for BrainBytes Monitoring
+# These rules define when to trigger alerts
+
+groups:
+  - name: brainbytes.alerts
+    rules:
+      # High Priority Alerts
+      - alert: BrainBytesDown
+        expr: up{job="brainbytes-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: brainbytes
+        annotations:
+          summary: "BrainBytes application is down"
+          description: "BrainBytes backend service has been down for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: brainbytes:error_rate_5m > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: brainbytes
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors per second for the last 5 minutes."
+
+      - alert: HighResponseTime
+        expr: brainbytes:http_request_duration_95th_percentile > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: brainbytes
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for the last 5 minutes."
+
+      # AI Service Alerts
+      - alert: AIServiceDown
+        expr: brainbytes:ai_response_rate_5m == 0
+        for: 3m
+        labels:
+          severity: critical
+          service: brainbytes
+          component: ai
+        annotations:
+          summary: "AI service is not responding"
+          description: "No AI responses generated for the last 3 minutes."
+
+      - alert: LowAISuccessRate
+        expr: brainbytes:ai_success_rate_5m < 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: brainbytes
+          component: ai
+        annotations:
+          summary: "Low AI success rate"
+          description: "AI success rate is {{ $value | humanizePercentage }} for the last 5 minutes."
+
+      - alert: SlowAIResponse
+        expr: brainbytes:ai_response_duration_95th_percentile > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: brainbytes
+          component: ai
+        annotations:
+          summary: "Slow AI response time"
+          description: "95th percentile AI response time is {{ $value }}s for the last 5 minutes."
+
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: brainbytes:cpu_usage_percentage > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: brainbytes
+          component: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% for the last 5 minutes."
+
+      - alert: HighMemoryUsage
+        expr: brainbytes:memory_usage_percentage > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: brainbytes
+          component: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}% for the last 5 minutes."
+
+      - alert: LowDiskSpace
+        expr: (brainbytes_filesystem_free_bytes / brainbytes_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          service: brainbytes
+          component: system
+        annotations:
+          summary: "Low disk space"
+          description: "Less than 10% disk space remaining on {{ $labels.device }}."
+
+      # Database Alerts
+      - alert: SlowDatabaseQueries
+        expr: brainbytes:mongo_query_duration_95th_percentile > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: brainbytes
+          component: database
+        annotations:
+          summary: "Slow database queries"
+          description: "95th percentile database query time is {{ $value }}s for the last 5 minutes."
+
+      - alert: HighDatabaseQueryRate
+        expr: brainbytes:mongo_query_rate_5m > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: brainbytes
+          component: database
+        annotations:
+          summary: "High database query rate"
+          description: "Database query rate is {{ $value }} queries per second for the last 5 minutes."
+
+      # User Activity Alerts
+      - alert: NoUserActivity
+        expr: brainbytes:user_session_rate_5m == 0
+        for: 10m
+        labels:
+          severity: warning
+          service: brainbytes
+          component: user_activity
+        annotations:
+          summary: "No user activity detected"
+          description: "No user sessions created for the last 10 minutes."
+
+      - alert: LowChatActivity
+        expr: brainbytes:chat_message_rate_5m < 0.1
+        for: 15m
+        labels:
+          severity: info
+          service: brainbytes
+          component: user_activity
+        annotations:
+          summary: "Low chat activity"
+          description: "Chat message rate is {{ $value }} messages per second for the last 15 minutes."
+
+  - name: brainbytes.filipino_context_alerts
+    rules:
+      # Filipino Context Specific Alerts
+      - alert: HighMobileErrorRate
+        expr: rate(brainbytes_errors_total{device_type="mobile"}[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          service: brainbytes
+          context: filipino
+          component: mobile
+        annotations:
+          summary: "High error rate on mobile devices"
+          description: "Mobile device error rate is {{ $value }} errors per second for the last 5 minutes."
+
+      - alert: SlowConnectionSpeed
+        expr: brainbytes:connection_quality_avg{region="philippines"} < 2
+        for: 5m
+        labels:
+          severity: warning
+          service: brainbytes
+          context: filipino
+          component: connectivity
+        annotations:
+          summary: "Slow connection speed in Philippines"
+          description: "Average connection speed in Philippines is {{ $value }}Mbps for the last 5 minutes."
+
+      - alert: HighDataUsage
+        expr: rate(brainbytes_data_transfer_bytes_total[5m]) > 1000000
+        for: 5m
+        labels:
+          severity: info
+          service: brainbytes
+          context: filipino
+          component: data_usage
+        annotations:
+          summary: "High data transfer rate"
+          description: "Data transfer rate is {{ $value | humanizeBytes }} per second for the last 5 minutes."
+
+      - alert: HighOfflineUsage
+        expr: brainbytes:offline_usage_rate_5m > 0.5
+        for: 5m
+        labels:
+          severity: info
+          service: brainbytes
+          context: filipino
+          component: offline
+        annotations:
+          summary: "High offline usage detected"
+          description: "Offline usage rate is {{ $value }} instances per second for the last 5 minutes."
+
+  - name: brainbytes.educational_alerts
+    rules:
+      # Educational Content Alerts
+      - alert: UnpopularSubject
+        expr: brainbytes:subject_popularity_rate_5m{subject!="general"} == 0
+        for: 30m
+        labels:
+          severity: info
+          service: brainbytes
+          component: education
+        annotations:
+          summary: "Subject {{ $labels.subject }} has no activity"
+          description: "No requests for subject {{ $labels.subject }} for the last 30 minutes."
+
+      - alert: LowLearningMaterialViews
+        expr: brainbytes:learning_material_view_rate_5m < 0.01
+        for: 20m
+        labels:
+          severity: info
+          service: brainbytes
+          component: education
+        annotations:
+          summary: "Low learning material engagement"
+          description: "Learning material view rate is {{ $value }} views per second for the last 20 minutes."
+
+  - name: brainbytes.business_alerts
+    rules:
+      # Business Logic Alerts
+      - alert: LowDailyActiveUsers
+        expr: brainbytes:total_users_active_24h < 10
+        for: 1h
+        labels:
+          severity: warning
+          service: brainbytes
+          component: business
+        annotations:
+          summary: "Low daily active users"
+          description: "Only {{ $value }} users were active in the last 24 hours."
+
+      - alert: LowAIChatRatio
+        expr: (brainbytes:total_ai_responses_1h / brainbytes:total_chat_messages_1h) < 0.8
+        for: 1h
+        labels:
+          severity: warning
+          service: brainbytes
+          component: business
+        annotations:
+          summary: "Low AI response ratio"
+          description: "AI response ratio is {{ $value | humanizePercentage }} for the last hour."

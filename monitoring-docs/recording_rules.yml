@@ -1,0 +1,159 @@
+# Recording Rules for BrainBytes Monitoring
+# These rules pre-compute frequently used expressions
+
+groups:
+  - name: brainbytes.rules
+    rules:
+      # Application Performance Rules
+      - record: brainbytes:http_request_rate_5m
+        expr: rate(brainbytes_http_requests_total[5m])
+        labels:
+          service: brainbytes
+
+      - record: brainbytes:http_request_duration_95th_percentile
+        expr: histogram_quantile(0.95, rate(brainbytes_http_request_duration_seconds_bucket[5m]))
+        labels:
+          service: brainbytes
+
+      - record: brainbytes:error_rate_5m
+        expr: rate(brainbytes_errors_total[5m])
+        labels:
+          service: brainbytes
+
+      # AI Response Performance Rules
+      - record: brainbytes:ai_response_rate_5m
+        expr: rate(brainbytes_ai_responses_total[5m])
+        labels:
+          service: brainbytes
+
+      - record: brainbytes:ai_response_duration_95th_percentile
+        expr: histogram_quantile(0.95, rate(brainbytes_ai_response_time_seconds_bucket[5m]))
+        labels:
+          service: brainbytes
+
+      - record: brainbytes:ai_success_rate_5m
+        expr: rate(brainbytes_ai_responses_total{success="true"}[5m]) / rate(brainbytes_ai_responses_total[5m])
+        labels:
+          service: brainbytes
+
+      # User Activity Rules
+      - record: brainbytes:chat_message_rate_5m
+        expr: rate(brainbytes_chat_messages_total[5m])
+        labels:
+          service: brainbytes
+
+      - record: brainbytes:user_session_rate_5m
+        expr: rate(brainbytes_user_sessions_total[5m])
+        labels:
+          service: brainbytes
+
+      # Filipino Context Rules
+      - record: brainbytes:mobile_usage_percentage
+        expr: brainbytes_mobile_users_percentage
+        labels:
+          service: brainbytes
+
+      - record: brainbytes:connection_quality_avg
+        expr: avg(brainbytes_connection_speed_mbps) by (region, connection_type)
+        labels:
+          service: brainbytes
+
+      # Educational Content Rules
+      - record: brainbytes:subject_popularity_rate_5m
+        expr: rate(brainbytes_subject_requests_total[5m])
+        labels:
+          service: brainbytes
+
+      - record: brainbytes:learning_material_view_rate_5m
+        expr: rate(brainbytes_learning_material_views_total[5m])
+        labels:
+          service: brainbytes
+
+      # System Performance Rules
+      - record: brainbytes:cpu_usage_percentage
+        expr: 100 - (avg(rate(brainbytes_cpu_seconds_total{mode="idle"}[5m])) * 100)
+        labels:
+          service: brainbytes
+
+      - record: brainbytes:memory_usage_percentage
+        expr: (1 - (brainbytes_memory_MemAvailable_bytes / brainbytes_memory_MemTotal_bytes)) * 100
+        labels:
+          service: brainbytes
+
+      # Database Performance Rules
+      - record: brainbytes:mongo_query_rate_5m
+        expr: rate(brainbytes_mongo_queries_total[5m])
+        labels:
+          service: brainbytes
+
+      - record: brainbytes:mongo_query_duration_95th_percentile
+        expr: histogram_quantile(0.95, rate(brainbytes_mongo_query_duration_seconds_bucket[5m]))
+        labels:
+          service: brainbytes
+
+  - name: brainbytes.aggregation
+    rules:
+      # Aggregation rules for different time windows
+      - record: brainbytes:total_users_active_1h
+        expr: sum(increase(brainbytes_user_sessions_total[1h]))
+        labels:
+          service: brainbytes
+          timeframe: 1h
+
+      - record: brainbytes:total_chat_messages_1h
+        expr: sum(increase(brainbytes_chat_messages_total[1h]))
+        labels:
+          service: brainbytes
+          timeframe: 1h
+
+      - record: brainbytes:total_ai_responses_1h
+        expr: sum(increase(brainbytes_ai_responses_total[1h]))
+        labels:
+          service: brainbytes
+          timeframe: 1h
+
+      # Daily aggregations
+      - record: brainbytes:total_users_active_24h
+        expr: sum(increase(brainbytes_user_sessions_total[24h]))
+        labels:
+          service: brainbytes
+          timeframe: 24h
+
+      - record: brainbytes:total_chat_messages_24h
+        expr: sum(increase(brainbytes_chat_messages_total[24h]))
+        labels:
+          service: brainbytes
+          timeframe: 24h
+
+      - record: brainbytes:total_ai_responses_24h
+        expr: sum(increase(brainbytes_ai_responses_total[24h]))
+        labels:
+          service: brainbytes
+          timeframe: 24h
+
+  - name: brainbytes.filipino_context
+    rules:
+      # Filipino-specific metrics
+      - record: brainbytes:mobile_users_ratio
+        expr: sum(brainbytes_user_sessions_total{device_type="mobile"}) / sum(brainbytes_user_sessions_total)
+        labels:
+          service: brainbytes
+          context: filipino
+
+      - record: brainbytes:offline_usage_rate_5m
+        expr: rate(brainbytes_offline_usage_total[5m])
+        labels:
+          service: brainbytes
+          context: filipino
+
+      - record: brainbytes:data_transfer_rate_5m
+        expr: rate(brainbytes_data_transfer_bytes_total[5m])
+        labels:
+          service: brainbytes
+          context: filipino
+
+      - record: brainbytes:avg_connection_speed_by_region
+        expr: avg(brainbytes_connection_speed_mbps) by (region)
+        labels:
+          service: brainbytes
+          context: filipino
