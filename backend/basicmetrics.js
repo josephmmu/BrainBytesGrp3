@@ -82,4 +82,4 @@ function decrementActiveSessions() {
 // };
 
 
-export { metricsMiddleware, incrementActiveSessions, decrementActiveSessions, register }
+export { metricsMiddleware, incrementActiveSessions, decrementActiveSessions, register };

@@ -4,7 +4,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import aiService from './aiService.js';
-import { metricsMiddleware, incrementActiveSessions, decrementActiveSessions } from './basicmetrics.js';
+import { metricsMiddleware, incrementActiveSessions, decrementActiveSessions, register } from './basicmetrics.js';
 import client from 'prom-client';
 
 const app = express();
@@ -52,8 +52,8 @@ app.get('/', (req, res) => {
 
 // Serve metrics on same port as main app
 app.get('/metrics', async (req, res) => {
-  res.set('Content-Type', client.register.contentType);
-  res.end(await client.register.metrics());
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 
