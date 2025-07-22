@@ -1,8 +1,9 @@
 version: '3.8'
 services:
-  # Frontend container
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "5173:3000"
     volumes:
@@ -16,9 +17,10 @@ services:
     networks:
       - brainbytes-network
 
-  # Backend API container
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "8080:3000"
     volumes:
@@ -34,7 +36,6 @@ services:
     networks:
       - brainbytes-network
 
-  # MongoDB container
   mongo:
     image: mongo:latest
     ports:
@@ -45,7 +46,6 @@ services:
     networks:
       - brainbytes-network
 
-  # Prometheus container
   prometheus:
     image: prom/prometheus:latest
     ports:
@@ -67,7 +67,6 @@ services:
     networks:
       - brainbytes-network
 
-  # Grafana container
   grafana:
     image: grafana/grafana:latest
     ports:
@@ -83,7 +82,6 @@ services:
     networks:
       - brainbytes-network
 
-  # Alertmanager container
   alertmanager:
     image: prom/alertmanager:latest
     ports:
@@ -99,7 +97,6 @@ services:
     networks:
       - brainbytes-network
 
-  # Node Exporter for system metrics
   node-exporter:
     image: prom/node-exporter:latest
     ports:
@@ -116,7 +113,6 @@ services:
     networks:
       - brainbytes-network
 
-  # cAdvisor for container metrics
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     ports:
@@ -130,18 +126,7 @@ services:
     networks:
       - brainbytes-network
 
-  # Traffic Simulator
-  traffic-simulator:
-    build: ./monitoring-docs/simulation
-    depends_on:
-      - backend
-    environment:
-      - BACKEND_URL=http://backend:3000
-      - SIMULATION_DURATION=300
-      - CONCURRENT_USERS=10
-    restart: unless-stopped
-    networks:
-      - brainbytes-network
+ 
 
 volumes:
   mongo_data:
