@@ -33,11 +33,11 @@ const activeSessionsGauge = new client.Gauge({
 activeSessionsGauge.set(0);
 
 // Export metrics endpoint
-const metricsApp = express();
-metricsApp.get('/metrics', async (req, res) => {
-  res.set('Content-Type', register.contentType);
-  res.end(await register.metrics());
-});
+// const metricsApp = express();
+// metricsApp.get('/metrics', async (req, res) => {
+//   res.set('Content-Type', register.contentType);
+//   res.end(await register.metrics());
+// });
 
 
 
@@ -82,4 +82,4 @@ function decrementActiveSessions() {
 // };
 
 
-export { metricsMiddleware, incrementActiveSessions, decrementActiveSessions }
+export { metricsMiddleware, incrementActiveSessions, decrementActiveSessions, register }
