@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import ChatWindow from '../components/chatWindow';
+import API_BASE_URL from '../../config/api.js';
 
 export default function Dashboard() {
   const [selectedSubject, setSelectedSubject] = useState('General');
@@ -111,7 +112,7 @@ export default function Dashboard() {
     setIsTyping(true);
 
     try {
-      const response = await axios.post('/api/messages', {
+      const response = await axios.post(`${API_BASE_URL}/api/messages`, {
         text: userMessage.text,
         subject: selectedSubject
       });
