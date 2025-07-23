@@ -23,6 +23,7 @@ export default function Dashboard() {
   const { user, logout, loading: authLoading } = useContext(AuthContext);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     if (authLoading) return;
@@ -115,7 +116,12 @@ export default function Dashboard() {
       const response = await axios.post(`${API_BASE_URL}/api/messages`, {
         text: userMessage.text,
         subject: selectedSubject
-      });
+      },{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
       const aiMessage = {
         ...response.data,
