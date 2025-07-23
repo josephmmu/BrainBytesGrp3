@@ -3,7 +3,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '../context/AuthContext';
-import ChatWindow from './ChatWindow';
+import ChatWindow from '../components/chatWindow';
 
 export default function Dashboard() {
   const [selectedSubject, setSelectedSubject] = useState('General');
