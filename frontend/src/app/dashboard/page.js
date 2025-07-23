@@ -1,39 +1,27 @@
 'use client';
 
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import API_BASE_URL from '../../config/api.js';
+import ChatWindow from './ChatWindow';
 
 export default function Dashboard() {
-  const [messages, setMessages] = useState([]);
-  const [chatMessagesMap, setChatMessagesMap] = useState({}); // Store messages for each chat
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [isTyping, setIsTyping] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState('General');
   const [chatSessions, setChatSessions] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [editingSession, setEditingSession] = useState(null);
   const [editingName, setEditingName] = useState('');
-  const messageEndRef = useRef(null);
   const { user, logout, loading: authLoading } = useContext(AuthContext);
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Don't redirect during auth loading to avoid hydration issues
     if (authLoading) return;
-    
     if (!user) {
       router.push('/login');
       return;
     }
-    // Always start fresh - clear any existing data
-    console.log('Dashboard mounted - clearing all data for fresh start');
-    setMessages([]);
-    setChatMessagesMap({});
     setChatSessions([]);
     setActiveChatId(null);
     setActiveDropdown(null);
@@ -41,96 +29,6 @@ export default function Dashboard() {
     setEditingName('');
     setLoading(false);
   }, [user, authLoading, router]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const fetchMessages = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/api/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMessages(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      if (error.response?.status === 401) {
-        logout();
-        router.push('/login');
-      }
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      setIsTyping(true);
-      const userMsg = newMessage;
-      setNewMessage('');
-
-      let currentChatId = activeChatId;
-
-      // Create first chat session if none exist
-      if (chatSessions.length === 0) {
-        const newChatId = Date.now();
-        const newSession = { id: newChatId, name: 'Chat 1', active: true };
-        setChatSessions([newSession]);
-        setActiveChatId(newChatId);
-        currentChatId = newChatId;
-      }
-
-      // Optimistically add user message to current chat
-      const tempUserMsg = {
-        _id: Date.now().toString(),
-        text: userMsg,
-        isUser: true,
-        createdAt: new Date().toISOString(),
-        subject: selectedSubject
-      };
-      
-      // Update messages for the current chat
-      setMessages(prev => [...prev, tempUserMsg]);
-      setChatMessagesMap(prev => ({
-        ...prev,
-        [currentChatId]: [...(prev[currentChatId] || []), tempUserMsg]
-      }));
-
-      const response = await axios.post(
-        `${API_BASE_URL}/api/messages`,
-        { text: userMsg, subject: selectedSubject },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      // Remove temp message and add real messages to current chat
-      const withoutTemp = (prev) => prev.filter(msg => msg._id !== tempUserMsg._id);
-      const newMessages = [response.data.userMessage, response.data.aiMessage];
-      
-      setMessages(prev => [...withoutTemp(prev), ...newMessages]);
-      setChatMessagesMap(prev => ({
-        ...prev,
-        [currentChatId]: [...withoutTemp(prev[currentChatId] || []), ...newMessages]
-      }));
-
-      setIsTyping(false);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setIsTyping(false);
-      if (error.response?.status === 401) {
-        logout();
-        router.push('/login');
-      }
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -144,8 +42,6 @@ export default function Dashboard() {
       { id: newChatId, name: `Chat ${prev.length + 1}`, active: true }
     ]);
     setActiveChatId(newChatId);
-    // Start with empty messages for new chat
-    setMessages([]);
   };
 
   const handleChatSwitch = (chatId) => {
@@ -154,11 +50,6 @@ export default function Dashboard() {
       active: chat.id === chatId 
     })));
     setActiveChatId(chatId);
-    // Load messages for this chat from the chat messages map using callback
-    setChatMessagesMap(currentMap => {
-      setMessages(currentMap[chatId] || []);
-      return currentMap; // Return unchanged map
-    });
     setActiveDropdown(null);
   };
 
@@ -171,27 +62,12 @@ export default function Dashboard() {
   };
 
   const handleDeleteChat = (chatId) => {
-    if (chatSessions.length === 1) return; // Don't delete the last chat
-    
+    if (chatSessions.length === 1) return;
     setChatSessions(prev => {
       const filtered = prev.filter(chat => chat.id !== chatId);
       if (chatId === activeChatId && filtered.length > 0) {
         filtered[0].active = true;
         setActiveChatId(filtered[0].id);
-        // Load messages for the new active chat
-        setChatMessagesMap(currentMap => {
-          const newMap = { ...currentMap };
-          delete newMap[chatId]; // Remove deleted chat messages
-          setMessages(newMap[filtered[0].id] || []); // Load messages for new active chat
-          return newMap;
-        });
-      } else {
-        // Just remove the deleted chat messages
-        setChatMessagesMap(currentMap => {
-          const newMap = { ...currentMap };
-          delete newMap[chatId];
-          return newMap;
-        });
       }
       return filtered;
     });
@@ -217,7 +93,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
-      {/* Header - matching login page style */}
       <header className="bg-white/95 backdrop-blur-sm shadow-lg border-b-4 border-slate-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -246,7 +121,6 @@ export default function Dashboard() {
       </header>
 
       <div className="flex h-[calc(100vh-88px)]">
-        {/* Sidebar */}
         <div className="w-80 bg-white/95 backdrop-blur-sm shadow-xl border-r border-gray-200">
           <div className="p-6">
             <button
@@ -259,7 +133,6 @@ export default function Dashboard() {
               <span>New Chat</span>
             </button>
 
-            {/* Subject Selector */}
             <div className="mb-6">
               <label className="block text-sm font-bold text-gray-700 mb-3 tracking-wide">
                 Academic Department:
@@ -280,7 +153,6 @@ export default function Dashboard() {
               </select>
             </div>
 
-            {/* Chat Sessions */}
             <div>
               <h3 className="text-sm font-bold text-gray-700 mb-3 tracking-wide">Chat Sessions:</h3>
               <div className="space-y-2">
@@ -296,80 +168,66 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   chatSessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className={`relative group rounded-lg transition-all duration-200 ${
-                      session.active 
-                        ? 'bg-slate-700 text-white shadow-md' 
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                    }`}
-                  >
-                    <div 
-                      className="p-3 cursor-pointer flex items-center justify-between"
-                      onClick={() => handleChatSwitch(session.id)}
-                    >
-                      {editingSession === session.id ? (
-                        <input
-                          type="text"
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onBlur={() => handleRenameChat(session.id, editingName)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              handleRenameChat(session.id, editingName);
-                            }
-                          }}
-                          className="bg-transparent border-b border-white text-sm font-medium outline-none flex-1 mr-2"
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <div className="font-medium text-sm flex-1">{session.name}</div>
-                      )}
-                      
-                      <div className="relative">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveDropdown(activeDropdown === session.id ? null : session.id);
-                          }}
-                          className={`p-1 rounded hover:bg-opacity-20 hover:bg-white transition-all duration-200 ${
-                            session.active ? 'text-white' : 'text-gray-500'
-                          }`}
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                          </svg>
-                        </button>
-                        
-                        {activeDropdown === session.id && (
-                          <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-24">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startEditing(session);
-                              }}
-                              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
-                            >
-                              Rename
-                            </button>
-                            {chatSessions.length > 1 && (
+                    <div key={session.id} className={`relative group rounded-lg transition-all duration-200 ${session.active ? 'bg-slate-700 text-white shadow-md' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}>
+                      <div className="p-3 cursor-pointer flex items-center justify-between" onClick={() => handleChatSwitch(session.id)}>
+                        {editingSession === session.id ? (
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onBlur={() => handleRenameChat(session.id, editingName)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                handleRenameChat(session.id, editingName);
+                              }
+                            }}
+                            className="bg-transparent border-b border-white text-sm font-medium outline-none flex-1 mr-2"
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <div className="font-medium text-sm flex-1">{session.name}</div>
+                        )}
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveDropdown(activeDropdown === session.id ? null : session.id);
+                            }}
+                            className={`p-1 rounded hover:bg-opacity-20 hover:bg-white transition-all duration-200 ${session.active ? 'text-white' : 'text-gray-500'}`}
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
+                          </button>
+                          {activeDropdown === session.id && (
+                            <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-24">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleDeleteChat(session.id);
+                                  startEditing(session);
                                 }}
-                                className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
                               >
-                                Delete
+                                Rename
                               </button>
-                            )}
-                          </div>
-                        )}
+                              {chatSessions.length > 1 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteChat(session.id);
+                                  }}
+                                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  ))
                 )}
               </div>
             </div>
@@ -377,124 +235,7 @@ export default function Dashboard() {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-white/90 backdrop-blur-sm">
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {messages.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="bg-slate-700 rounded-full p-6 mx-auto w-20 h-20 flex items-center justify-center shadow-lg mb-6">
-                  <div className="text-3xl text-white">�</div>
-                </div>
-                <h3 className="text-2xl font-bold text-slate-700 mb-4">
-                  Welcome to BrainBytes Chat
-                </h3>
-                <div className="h-0.5 w-24 bg-slate-400 mx-auto mb-4"></div>
-                <p className="text-gray-600 text-lg">
-                  Ready to explore <span className="font-semibold text-slate-700">{selectedSubject}</span>?
-                </p>
-                <p className="text-gray-500 mt-2">
-                  Ask any question to start your first chat session.
-                </p>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message._id}
-                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className="flex items-start space-x-3 max-w-2xl">
-                    {!message.isUser && (
-                      <div className="bg-red-900 rounded-full p-2 shadow-md">
-                        <div className="text-white text-sm">🎓</div>
-                      </div>
-                    )}
-                    <div
-                      className={`px-6 py-4 rounded-2xl shadow-lg ${
-                        message.isUser
-                          ? 'bg-red-900 text-white rounded-br-md border-l-4 border-yellow-400'
-                          : 'bg-white text-gray-900 rounded-bl-md border-l-4 border-red-900'
-                      }`}
-                    >
-                      <div className="whitespace-pre-wrap font-medium leading-relaxed">{message.text}</div>
-                      <div className={`text-xs mt-3 flex items-center space-x-2 ${
-                        message.isUser ? 'text-red-100' : 'text-gray-500'
-                      }`}>
-                        <span>{new Date(message.createdAt).toLocaleTimeString()}</span>
-                        {message.subject && (
-                          <>
-                            <span>•</span>
-                            <span className="font-semibold">{message.subject}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    {message.isUser && (
-                      <div className="bg-gray-200 rounded-full p-2 shadow-md">
-                        <div className="text-gray-600 text-sm">👤</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="flex items-start space-x-3 max-w-2xl">
-                  <div className="bg-red-900 rounded-full p-2 shadow-md">
-                    <div className="text-white text-sm">🎓</div>
-                  </div>
-                  <div className="bg-white text-gray-900 px-6 py-4 rounded-2xl rounded-bl-md border-l-4 border-red-900 shadow-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-red-900 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                      </div>
-                      <span className="text-sm text-gray-600 font-medium">AI is analyzing your question...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messageEndRef} />
-          </div>
-
-          {/* Input Area */}
-          <div className="border-t-2 border-slate-600 bg-gradient-to-r from-slate-50 to-gray-50 p-6">
-            <form onSubmit={handleSubmit} className="flex space-x-4">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder={`Ask about ${selectedSubject.toLowerCase()}... (e.g., "Explain quantum mechanics" or "What is calculus?")`}
-                className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-600 focus:border-slate-600 outline-none font-medium text-gray-800 bg-white shadow-lg"
-                disabled={isTyping}
-              />
-              <button
-                type="submit"
-                disabled={isTyping || !newMessage.trim()}
-                className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-400 text-white px-8 py-4 rounded-xl font-bold transition-all duration-200 flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                {isTyping ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Analyzing...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                    <span>Submit</span>
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
+        <ChatWindow subject={selectedSubject} activeChatId={activeChatId} />
       </div>
     </div>
   );

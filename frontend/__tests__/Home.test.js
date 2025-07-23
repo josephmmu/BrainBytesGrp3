@@ -1,88 +1,50 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import Home from '../src/app/page';
 import { AuthContext } from '../src/app/context/AuthContext';
-import axios from 'axios';
 
-// Mock scrollIntoView to prevent crash
-beforeAll(() => {
-  window.HTMLElement.prototype.scrollIntoView = jest.fn();
-});
+// Mock useRouter from next/navigation
+const mockPush = jest.fn();
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
 
-// Mock localStorage
-beforeEach(() => {
-  const localStorageMock = (() => {
-    let store = {};
-    return {
-      getItem: jest.fn((key) => store[key] || null),
-      setItem: jest.fn((key, value) => { store[key] = value.toString(); }),
-      removeItem: jest.fn((key) => { delete store[key]; }),
-      clear: jest.fn(() => { store = {}; }),
-    };
-  })();
-  Object.defineProperty(window, 'localStorage', { value: localStorageMock });
-});
-
-// Mock axios
-jest.mock('axios');
-
-describe('Home component', () => {
-  const mockUser = { email: 'test@example.com', token: 'mockToken' };
-  const mockLogout = jest.fn();
-  const mockLogin = jest.fn();
-
-  const renderWithAuth = () =>
+describe('Home component (redirect logic)', () => {
+  const renderWithAuth = (authValues) => {
     render(
-      <AuthContext.Provider value={{ user: mockUser, login: mockLogin, logout: mockLogout }}>
+      <AuthContext.Provider value={authValues}>
         <Home />
       </AuthContext.Provider>
     );
+  };
 
-  it('renders welcome message when no messages exist', async () => {
-    axios.get.mockResolvedValueOnce({ data: [] });
-    window.localStorage.getItem.mockReturnValue('mockToken');
-
-    renderWithAuth();
-
-    expect(await screen.findByText(/Welcome to BrainBytes AI Tutor!/)).toBeInTheDocument();
-    expect(screen.getByText(/Ask me any question/i)).toBeInTheDocument();
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('sends a message and receives an AI reply', async () => {
-    // Mock initial empty messages
-    axios.get.mockResolvedValueOnce({ data: [] });
+  it('displays redirect spinner while loading is true', () => {
+    renderWithAuth({ user: null, loading: true });
+    expect(screen.getByText(/redirecting/i)).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
 
-    // Mock message post
-    axios.post.mockResolvedValueOnce({
-      data: {
-        userMessage: {
-          _id: '1',
-          text: 'Hello',
-          isUser: true,
-          createdAt: new Date().toISOString(),
-        },
-        aiMessage: {
-          _id: '2',
-          text: 'Hi there! How can I help?',
-          isUser: false,
-          createdAt: new Date().toISOString(),
-        },
-      },
-    });
-
-    window.localStorage.getItem.mockReturnValue('mockToken');
-
-    renderWithAuth();
-
-    const input = await screen.findByPlaceholderText(/ask a question/i);
-    const button = screen.getByRole('button', { name: /send/i });
-
-    fireEvent.change(input, { target: { value: 'Hello' } });
-    fireEvent.click(button);
+  it('redirects to /dashboard if user is authenticated and loading is false', async () => {
+    renderWithAuth({ user: { email: 'test@example.com' }, loading: false });
 
     await waitFor(() => {
-      expect(screen.getByText('Hello')).toBeInTheDocument();
-      expect(screen.getByText('Hi there! How can I help?')).toBeInTheDocument();
+      expect(mockPush).toHaveBeenCalledWith('/dashboard');
     });
+
+    expect(screen.getByText(/redirecting/i)).toBeInTheDocument();
+  });
+
+  it('redirects to /login if user is not authenticated and loading is false', async () => {
+    renderWithAuth({ user: null, loading: false });
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/login');
+    });
+
+    expect(screen.getByText(/redirecting/i)).toBeInTheDocument();
   });
 });
