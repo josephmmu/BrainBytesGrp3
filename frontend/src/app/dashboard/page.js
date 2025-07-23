@@ -235,7 +235,16 @@ export default function Dashboard() {
         </div>
 
         {/* Main Chat Area */}
-        <ChatWindow subject={selectedSubject} activeChatId={activeChatId} />
+        <ChatWindow
+          subject={selectedSubject}
+          activeChatId={activeChatId}
+          messages={messages}
+          newMessage={newMessage}
+          setNewMessage={setNewMessage}
+          handleSubmit={handleSubmit}
+          isTyping={isTyping}
+          messageEndRef={messageEndRef}
+        />
       </div>
     </div>
   );
