@@ -27,7 +27,7 @@ BrainBytes is an AI-powered tutoring platform designed to provide accessible aca
 
 ## How to use the Tutoring Platform
 
-Link: https://147.185.221.27:25239/
+Link: https://brainbytesgrp3-frontend-production.up.railway.app/
 
 1. Launch the platform by clicking the link above, it should bring you directly to the platform
 2. Type in any topic or question of your choice for th platform to answer.
