@@ -8,6 +8,7 @@ import API_BASE_URL from '../../config/api.js';
 
 export default function Dashboard() {
   const [messages, setMessages] = useState([]);
+  const [chatMessagesMap, setChatMessagesMap] = useState({}); // Store messages for each chat
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
@@ -29,7 +30,16 @@ export default function Dashboard() {
       router.push('/login');
       return;
     }
-    fetchMessages();
+    // Always start fresh - clear any existing data
+    console.log('Dashboard mounted - clearing all data for fresh start');
+    setMessages([]);
+    setChatMessagesMap({});
+    setChatSessions([]);
+    setActiveChatId(null);
+    setActiveDropdown(null);
+    setEditingSession(null);
+    setEditingName('');
+    setLoading(false);
   }, [user, authLoading, router]);
 
   useEffect(() => {
@@ -40,7 +50,7 @@ export default function Dashboard() {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const fetchMessages = useCallback(async () => {
+  const fetchMessages = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_BASE_URL}/api/messages`, {
@@ -55,7 +65,8 @@ export default function Dashboard() {
         router.push('/login');
       }
       setLoading(false);
-    }},[] );
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,15 +78,18 @@ export default function Dashboard() {
       const userMsg = newMessage;
       setNewMessage('');
 
+      let currentChatId = activeChatId;
+
       // Create first chat session if none exist
       if (chatSessions.length === 0) {
         const newChatId = Date.now();
         const newSession = { id: newChatId, name: 'Chat 1', active: true };
         setChatSessions([newSession]);
         setActiveChatId(newChatId);
+        currentChatId = newChatId;
       }
 
-      // Optimistically add user message
+      // Optimistically add user message to current chat
       const tempUserMsg = {
         _id: Date.now().toString(),
         text: userMsg,
@@ -83,7 +97,13 @@ export default function Dashboard() {
         createdAt: new Date().toISOString(),
         subject: selectedSubject
       };
+      
+      // Update messages for the current chat
       setMessages(prev => [...prev, tempUserMsg]);
+      setChatMessagesMap(prev => ({
+        ...prev,
+        [currentChatId]: [...(prev[currentChatId] || []), tempUserMsg]
+      }));
 
       const response = await axios.post(
         `${API_BASE_URL}/api/messages`,
@@ -91,11 +111,15 @@ export default function Dashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Remove temp message and add real messages
-      setMessages(prev => {
-        const withoutTemp = prev.filter(msg => msg._id !== tempUserMsg._id);
-        return [...withoutTemp, response.data.userMessage, response.data.aiMessage];
-      });
+      // Remove temp message and add real messages to current chat
+      const withoutTemp = (prev) => prev.filter(msg => msg._id !== tempUserMsg._id);
+      const newMessages = [response.data.userMessage, response.data.aiMessage];
+      
+      setMessages(prev => [...withoutTemp(prev), ...newMessages]);
+      setChatMessagesMap(prev => ({
+        ...prev,
+        [currentChatId]: [...withoutTemp(prev[currentChatId] || []), ...newMessages]
+      }));
 
       setIsTyping(false);
     } catch (error) {
@@ -120,6 +144,7 @@ export default function Dashboard() {
       { id: newChatId, name: `Chat ${prev.length + 1}`, active: true }
     ]);
     setActiveChatId(newChatId);
+    // Start with empty messages for new chat
     setMessages([]);
   };
 
@@ -129,8 +154,11 @@ export default function Dashboard() {
       active: chat.id === chatId 
     })));
     setActiveChatId(chatId);
-    // In a real app, you'd fetch messages for this chat
-    setMessages([]);
+    // Load messages for this chat from the chat messages map using callback
+    setChatMessagesMap(currentMap => {
+      setMessages(currentMap[chatId] || []);
+      return currentMap; // Return unchanged map
+    });
     setActiveDropdown(null);
   };
 
@@ -150,7 +178,20 @@ export default function Dashboard() {
       if (chatId === activeChatId && filtered.length > 0) {
         filtered[0].active = true;
         setActiveChatId(filtered[0].id);
-        setMessages([]);
+        // Load messages for the new active chat
+        setChatMessagesMap(currentMap => {
+          const newMap = { ...currentMap };
+          delete newMap[chatId]; // Remove deleted chat messages
+          setMessages(newMap[filtered[0].id] || []); // Load messages for new active chat
+          return newMap;
+        });
+      } else {
+        // Just remove the deleted chat messages
+        setChatMessagesMap(currentMap => {
+          const newMap = { ...currentMap };
+          delete newMap[chatId];
+          return newMap;
+        });
       }
       return filtered;
     });
@@ -340,18 +381,18 @@ export default function Dashboard() {
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {messages.length === 0 ? (
               <div className="text-center py-16">
-                <div className="bg-red-900 rounded-full p-6 mx-auto w-20 h-20 flex items-center justify-center shadow-lg mb-6">
-                  <div className="text-3xl text-white">📚</div>
+                <div className="bg-slate-700 rounded-full p-6 mx-auto w-20 h-20 flex items-center justify-center shadow-lg mb-6">
+                  <div className="text-3xl text-white">�</div>
                 </div>
-                <h3 className="text-2xl font-bold text-red-900 mb-4">
-                  Welcome to Your Chat Session
+                <h3 className="text-2xl font-bold text-slate-700 mb-4">
+                  Welcome to BrainBytes Chat
                 </h3>
-                <div className="h-0.5 w-24 bg-yellow-400 mx-auto mb-4"></div>
+                <div className="h-0.5 w-24 bg-slate-400 mx-auto mb-4"></div>
                 <p className="text-gray-600 text-lg">
-                  Ready to explore <span className="font-semibold text-red-900">{selectedSubject}</span>?
+                  Ready to explore <span className="font-semibold text-slate-700">{selectedSubject}</span>?
                 </p>
                 <p className="text-gray-500 mt-2">
-                  {'Ask any question and I\'ll provide scholarly guidance and insights.'}
+                  Ask any question to start your first chat session.
                 </p>
               </div>
             ) : (
