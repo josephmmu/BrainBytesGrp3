@@ -4,41 +4,50 @@ import { jwtDecode } from 'jwt-decode';
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) =>  {
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only run on client side to avoid hydration issues
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+
     const token = localStorage.getItem('token');
     
     try {
       if (token) {
-      const decoded = jwtDecode(token);
-      setUser({ ...decoded, token });
+        const decoded = jwtDecode(token);
+        setUser({ ...decoded, token });
       }
     } catch (err) {
-      console.warn('Invalid Token found, clearning it: ', err.message);
+      console.warn('Invalid Token found, clearing it: ', err.message);
       localStorage.removeItem('token');
       setUser(null);
     } finally {
       setLoading(false);
     }
-
   }, []);
 
   const login = (token) => {
-    localStorage.setItem('token', token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', token);
+    }
     const decoded = jwtDecode(token);
     setUser({...decoded, token});
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout}}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

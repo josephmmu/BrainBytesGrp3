@@ -4,8 +4,10 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import aiService from './aiService.js';
-import { metricsMiddleware, incrementActiveSessions, decrementActiveSessions, register } from './basicmetrics.js';
-import client from 'prom-client';
+
+import { register, trackChatMessage, trackAIResponse, trackUserSession, trackSubjectRequest, trackMobileUsage, trackConnectionQuality } from './metrics.js';
+import { metricsMiddleware, deviceDetectionMiddleware, errorMetricsMiddleware } from './middleware/metricsMiddleware.js';
+
 
 const app = express();
 const JWT_SECRET = 'ooosecretkeeyy1';
@@ -13,7 +15,10 @@ const JWT_SECRET = 'ooosecretkeeyy1';
 app.use(cors());
 app.use(express.json());
 
+
+// Add metrics middleware
 app.use(metricsMiddleware);
+app.use(deviceDetectionMiddleware);
 
 // Models
 const messageSchema = new mongoose.Schema({
@@ -72,6 +77,27 @@ app.get('/api/session/end', (req, res) => {
 });
 
 
+// Metrics endpoint for Prometheus
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (err) {
+    res.status(500).end(err);
+  }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage()
+  });
+});
+
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -80,6 +106,10 @@ app.post('/api/login', async (req, res) => {
     if (user.password !== password) return res.status(401).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    
+    // Track user session metrics
+    trackUserSession('manual', req.deviceType);
+    
     return res.status(200).json({ 
       message: 'Login successful', 
       token, 
@@ -136,12 +166,22 @@ app.post('/api/messages', async (req, res) => {
     const userMessage = new Message({ text, isUser: true, userId, subject });
     await userMessage.save();
 
+    // Track chat message metrics
+    trackChatMessage('student', 'question');
+    trackSubjectRequest(subject || 'general', 'unknown');
+
+    const startTime = Date.now();
     const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 15000));
     const aiResult = await Promise.race([aiService.generateResponse(text, subject), timeout])
       .catch(() => ({ category: 'error', response: "I'm sorry, I couldn't process your request in time." }));
 
+    const aiResponseTime = (Date.now() - startTime) / 1000;
     const aiMessage = new Message({ text: aiResult.response, isUser: false, userId, subject });
     await aiMessage.save();
+
+    // Track AI response metrics
+    trackAIResponse('google-ai', subject || 'general', aiResponseTime, aiResult.category !== 'error');
+    trackChatMessage('ai', 'answer');
 
     res.status(201).json({ userMessage, aiMessage, category: aiResult.category });
   } catch (err) {
@@ -194,5 +234,8 @@ app.get('/learningmaterials', async (_, res) => {
   const learningMaterials = await LearningMaterial.find();
   res.json(learningMaterials);
 });
+
+// Add error handling middleware
+app.use(errorMetricsMiddleware);
 
 export default app;

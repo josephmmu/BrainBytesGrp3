@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 import { GoogleGenAI } from "@google/genai";
-const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
+const ai = new GoogleGenAI({apiKey: process.env.GOOGLE_API_KEY});
 
 // Basic word list
 const positiveWords = ['good', 'great', 'happy', 'excellent', 'amazing', 'love', 'fantastic', 'like', 'nice', 'awesome'];

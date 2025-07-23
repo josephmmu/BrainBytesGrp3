@@ -1,10 +1,11 @@
 // backend/server.js
+import './loadEnv.js';
 import mongoose from 'mongoose';
 import app from './app.js';
 
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect(process.env.mongodbURL, {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   retryWrites: true

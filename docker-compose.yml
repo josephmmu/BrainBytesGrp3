@@ -1,93 +1,141 @@
-version: '3'
+version: '3.8'
 services:
-  # Frontend container
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "8080:3000"
+      - "5173:3000"
     volumes:
       - ./frontend:/usr/src/app
-      - /usr/src/app/node_modules     
-      - /usr/src/app/.next    
+      - /usr/src/app/node_modules
     environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
     depends_on:
       - backend
     networks:
       - app-network
     restart: unless-stopped
+    networks:
+      - brainbytes-network
 
-  # Backend API container
   backend:
-    build: 
-      context: .
-      dockerfile: backend/Dockerfile
-    env_file: 
-      - .env
-    # command: sh -c "node seedUser.js && node server.js"  # Runs seed first
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "8080:3000"
     volumes:
       - ./backend:/usr/src/app
-    networks:
-      - app-network
+      - /usr/src/app/node_modules
+    environment:
+      - GOOGLE_API_KEY=AIzaSyAgt4fNNyGvhD35MYjj0sMBARyqYWbQW1Q
+      - MONGODB_URI=mongodb+srv://johnau:admin01@cluster0.udagqqp.mongodb.net/
+      - PORT=3000
+    depends_on:
+      - mongo
     restart: unless-stopped
+    networks:
+      - brainbytes-network
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    networks:
+      - brainbytes-network
 
   prometheus:
-    image: prom/prometheus:v2.43.0
-    container_name: prometheus
+    image: prom/prometheus:latest
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - ./monitoring-docs/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring-docs/recording_rules.yml:/etc/prometheus/recording_rules.yml
+      - ./monitoring-docs/alert_rules.yml:/etc/prometheus/alert_rules.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
       - '--web.enable-lifecycle'
-    networks:
-      - app-network
     restart: unless-stopped
+    networks:
+      - brainbytes-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3002:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - brainbytes-network
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring-docs/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    restart: unless-stopped
+    networks:
+      - brainbytes-network
 
   node-exporter:
-    image: prom/node-exporter:v1.5.0
-    container_name: node-exporter
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
-      - /:/rootfs:ro
+      - /:/host:ro
     command:
       - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($|/)'
-    networks:
-      - app-network
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     restart: unless-stopped
+    networks:
+      - brainbytes-network
 
-  grafana:
-    image: grafana/grafana:10.2.3
-    container_name: grafana
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
     ports:
-      - "3001:3000"  # Host 3001 → Grafana's default port 3000
+      - "8081:8080"
     volumes:
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    networks:
-      - app-network
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
     restart: unless-stopped
+    networks:
+      - brainbytes-network
 
+ 
 
 volumes:
-  mongo-data:
+  mongo_data:
   prometheus_data:
   grafana_data:
+  alertmanager_data:
 
 networks:
-  app-network:
+  brainbytes-network:
     driver: bridge
