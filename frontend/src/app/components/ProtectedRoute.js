@@ -9,7 +9,7 @@ export default function ProtectedRoute({ children }) {
 
   useEffect(() => {
     if (!user) router.push('/login');
-  }, [user]);
+  }, [user, router]);
 
   return user ? children : null;
 }

@@ -40,7 +40,7 @@ export default function Dashboard() {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_BASE_URL}/api/messages`, {
@@ -55,8 +55,7 @@ export default function Dashboard() {
         router.push('/login');
       }
       setLoading(false);
-    }
-  };
+    }},[] );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -352,7 +351,7 @@ export default function Dashboard() {
                   Ready to explore <span className="font-semibold text-red-900">{selectedSubject}</span>?
                 </p>
                 <p className="text-gray-500 mt-2">
-                  Ask any question and I'll provide scholarly guidance and insights.
+                  {'Ask any question and I\'ll provide scholarly guidance and insights.'}
                 </p>
               </div>
             ) : (
