@@ -3,7 +3,7 @@ import './loadEnv.js';
 import mongoose from 'mongoose';
 import app from './app.js';
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,

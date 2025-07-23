@@ -4,14 +4,17 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import aiService from './aiService.js';
+
 import { register, trackChatMessage, trackAIResponse, trackUserSession, trackSubjectRequest, trackMobileUsage, trackConnectionQuality } from './metrics.js';
 import { metricsMiddleware, deviceDetectionMiddleware, errorMetricsMiddleware } from './middleware/metricsMiddleware.js';
+
 
 const app = express();
 const JWT_SECRET = 'ooosecretkeeyy1';
 
 app.use(cors());
 app.use(express.json());
+
 
 // Add metrics middleware
 app.use(metricsMiddleware);
@@ -47,14 +50,32 @@ const User = mongoose.model('User', userSchema);
 const LearningMaterial = mongoose.model('LearningMaterial', learningMaterialSchema);
 const Message = mongoose.model('Message', messageSchema);
 
-
-
-
-
 // Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the BrainBytes API' });
 });
+
+// Serve metrics on same port as main app
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
+
+
+// For Metrics
+// Your existing routes
+app.get('/api/session/start', (req, res) => {
+  // Start tutoring session logic
+  incrementActiveSessions();
+  res.json({ success: true });
+});
+
+app.get('/api/session/end', (req, res) => {
+  // End tutoring session logic
+  decrementActiveSessions();
+  res.json({ success: true });
+});
+
 
 // Metrics endpoint for Prometheus
 app.get('/metrics', async (req, res) => {
@@ -75,6 +96,7 @@ app.get('/health', (req, res) => {
     memory: process.memoryUsage()
   });
 });
+
 
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;

@@ -5,6 +5,8 @@
 .dockerignore
 Dockerfile
 docker-compose.yml
+
 # Allow monitoring documentation
 !monitoring-docs/**/*.md
 !README.md
+
