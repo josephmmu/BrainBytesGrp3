@@ -1,4 +1,5 @@
-import React, {  useEffect } from 'react';
+// Refactored chatWindow.js
+import React, { useEffect } from 'react';
 
 export default function ChatWindow({
   messages = [],
@@ -7,11 +8,8 @@ export default function ChatWindow({
   setNewMessage = () => {},
   handleSubmit = () => {},
   messageEndRef = { current: null },
-  selectedSubject = 'General Studies', 
+  subject = 'General Studies',
 }) {
-
-  //const messageEndRef = useRef(null);
-
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
@@ -29,7 +27,7 @@ export default function ChatWindow({
             </h3>
             <div className="h-0.5 w-24 bg-slate-400 mx-auto mb-4"></div>
             <p className="text-gray-600 text-lg">
-              Ready to explore <span className="font-semibold text-slate-700">{selectedSubject}</span>?
+              Ready to explore <span className="font-semibold text-slate-700">{subject}</span>?
             </p>
             <p className="text-gray-500 mt-2">
               Ask any question to start your first chat session.
@@ -37,31 +35,18 @@ export default function ChatWindow({
           </div>
         ) : (
           messages.map((message) => (
-            <div
-              key={message._id}
-              className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-            >
+            <div key={message._id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
               <div className="flex items-start space-x-3 max-w-2xl">
                 {!message.isUser && (
                   <div className="bg-red-900 rounded-full p-2 shadow-md">
                     <div className="text-white text-sm">🎓</div>
                   </div>
                 )}
-                <div
-                  className={`px-6 py-4 rounded-2xl shadow-lg ${
-                    message.isUser
-                      ? 'bg-red-900 text-white rounded-br-md border-l-4 border-yellow-400'
-                      : 'bg-white text-gray-900 rounded-bl-md border-l-4 border-red-900'
-                  }`}
-                >
+                <div className={`px-6 py-4 rounded-2xl shadow-lg ${message.isUser ? 'bg-red-900 text-white rounded-br-md border-l-4 border-yellow-400' : 'bg-white text-gray-900 rounded-bl-md border-l-4 border-red-900'}`}>
                   <div className="whitespace-pre-wrap font-medium leading-relaxed">
                     {message.text}
                   </div>
-                  <div
-                    className={`text-xs mt-3 flex items-center space-x-2 ${
-                      message.isUser ? 'text-red-100' : 'text-gray-500'
-                    }`}
-                  >
+                  <div className={`text-xs mt-3 flex items-center space-x-2 ${message.isUser ? 'text-red-100' : 'text-gray-500'}`}>
                     <span>{new Date(message.createdAt).toLocaleTimeString()}</span>
                     {message.subject && (
                       <>
@@ -110,7 +95,7 @@ export default function ChatWindow({
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={`Ask about ${selectedSubject.toLowerCase()}...`}
+            placeholder={`Ask about ${subject.toLowerCase()}...`}
             className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-600 focus:border-slate-600 outline-none font-medium text-gray-800 bg-white shadow-lg"
             disabled={isTyping}
           />
