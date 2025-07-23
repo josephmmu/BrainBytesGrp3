@@ -1,4 +1,3 @@
-// Refactored chatWindow.js
 import React, { useEffect } from 'react';
 
 export default function ChatWindow({
@@ -34,8 +33,8 @@ export default function ChatWindow({
             </p>
           </div>
         ) : (
-          messages.map((message) => (
-            <div key={message._id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+          messages.map((message, index) => (
+            <div key={message._id || index} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
               <div className="flex items-start space-x-3 max-w-2xl">
                 {!message.isUser && (
                   <div className="bg-red-900 rounded-full p-2 shadow-md">

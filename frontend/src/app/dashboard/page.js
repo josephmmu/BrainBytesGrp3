@@ -1,4 +1,3 @@
-// Refactored page.js (Dashboard) with full layout restored
 'use client';
 
 import { useState, useEffect, useContext, useRef } from 'react';
