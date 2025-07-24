@@ -195,7 +195,7 @@ Our application uses a microservices architecture with the following containers:
 - ✅ **Production Operations**: Incident response, performance optimization, reliability
 
 ## Final Presentation
-**Presentation Video**: [Video demonstration of BrainBytes platform, monitoring systems, and CI/CD pipeline]
+**Presentation Video**: https://drive.google.com/drive/folders/1odbnpZ9mQIsPfkPXBr4fwdZIyZKNfI-a?usp=sharing
 
 **Presentation Date**: July 24, 2025  
 **Duration**: 15 minutes  
